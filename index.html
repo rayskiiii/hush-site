@@ -269,6 +269,94 @@ h1 .grad {
 }
 
 
+
+/* ------------------------------------------------- fan-out animation */
+/*
+ * Sparks run the curves from the file block out to each channel, and the
+ * clips on a strip brighten as its spark lands. The point being made is
+ * "one file becomes five separate tracks", so the motion has to travel
+ * outward - a strip that just pulses on its own says nothing.
+ */
+.fan svg .spark { fill: var(--neon); }
+
+.fan .out .strip i {
+  background: #3f5a28;
+  transition: none;
+}
+.fan.lit .out .strip i {
+  animation: chLight 2.8s ease-in-out infinite;
+}
+@keyframes chLight {
+  0%, 22%   { background: #3f5a28; }
+  38%, 78%  { background: var(--live); }
+  100%      { background: #3f5a28; }
+}
+
+/* ------------------------------------------------------ live meters */
+/*
+ * The bar wobbles like a level meter, but the measured value stays readable:
+ * the wobble is capped below it and a peak marker sits at the true number.
+ * Animating the bar itself to the value would make a data graphic lie every
+ * frame it was not at rest.
+ */
+.bar-outer { position: relative; }
+.bar-peak {
+  position: absolute; top: 0; bottom: 0; width: 2px;
+  background: var(--neon); opacity: .9; border-radius: 2px;
+}
+.in .bar-fill.meter { animation: meter 2.4s ease-in-out infinite; }
+@keyframes meter {
+  0%   { transform: scaleX(.80); }
+  14%  { transform: scaleX(.97); }
+  27%  { transform: scaleX(.84); }
+  41%  { transform: scaleX(1);   }
+  55%  { transform: scaleX(.78); }
+  68%  { transform: scaleX(.93); }
+  82%  { transform: scaleX(.83); }
+  100% { transform: scaleX(.80); }
+}
+.bar-row:nth-child(2) .bar-fill.meter { animation-delay: -.7s; }
+.bar-row:nth-child(3) .bar-fill.meter { animation-delay: -1.4s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fan.lit .out .strip i { animation: none; background: var(--live); }
+  .in .bar-fill.meter { animation: none; transform: scaleX(1); }
+}
+
+
+/* --------------------------------------------------------------- video */
+.video-frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #0f0f12;
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+.video-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.video-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
+.video-frame .play {
+  position: absolute; inset: 0; margin: auto;
+  width: 74px; height: 74px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--neon), var(--live));
+  box-shadow: 0 0 34px rgba(163,230,53,.35);
+  border: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .15s ease;
+}
+.video-frame:hover .play { transform: scale(1.06); }
+.video-frame .play::after {
+  content: ''; margin-left: 5px;
+  border-style: solid; border-width: 13px 0 13px 21px;
+  border-color: transparent transparent transparent #0f1a05;
+}
+.video-empty {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted); font-size: 14px; text-align: center; padding: 24px;
+}
+
 /* ------------------------------------------------------------- pricing */
 .pay-toggle {
   display: flex; align-items: center; justify-content: center;
@@ -532,6 +620,7 @@ footer .spacer { margin-left: auto; }
     </span>
     <span class="spacer"></span>
     <a class="link" href="#how">How it works</a>
+    <a class="link" href="#watch">Watch</a>
     <a class="link" href="#try">Pricing</a>
     <a class="link" href="#faq">FAQ</a>
     <a class="link" href="mailto:EMAIL-HERE">Contact</a>
@@ -598,17 +687,17 @@ footer .spacer { margin-left: auto; }
       <div class="bars">
         <div class="bar-row">
           <span class="bar-label">A2 speaking</span>
-          <span class="bar-outer"><span class="bar-fill" style="width:78%"></span></span>
+          <span class="bar-outer"><span class="bar-fill meter" style="width:78%"></span><span class="bar-peak" style="left:calc(78% - 1px)"></span></span>
           <span class="bar-num">−17.1 dB</span>
         </div>
         <div class="bar-row">
           <span class="bar-label">A1 hearing A2</span>
-          <span class="bar-outer"><span class="bar-fill spill" style="width:55%"></span></span>
+          <span class="bar-outer"><span class="bar-fill spill meter" style="width:55%"></span><span class="bar-peak" style="left:calc(55% - 1px)"></span></span>
           <span class="bar-num">−27.0 dB</span>
         </div>
         <div class="bar-row">
           <span class="bar-label">A1 speaking</span>
-          <span class="bar-outer"><span class="bar-fill" style="width:62%"></span></span>
+          <span class="bar-outer"><span class="bar-fill meter" style="width:62%"></span><span class="bar-peak" style="left:calc(62% - 1px)"></span></span>
           <span class="bar-num">−21.2 dB</span>
         </div>
       </div>
@@ -879,6 +968,32 @@ footer .spacer { margin-left: auto; }
   </div>
 </section>
 
+
+<section id="watch">
+  <div class="wrap">
+    <h2>Watch it run.</h2>
+    <p class="lede">
+      Two minutes, on a real episode: picking the mic tracks, saying what kind
+      of recording it is, and what the timeline looks like afterwards.
+    </p>
+
+    <!--
+      VIDEO-HERE - paste the YouTube video id (the part after v=) into
+      data-yt below and the thumbnail and player wire themselves up.
+
+      Nothing loads from YouTube until someone clicks. That is deliberate: a
+      normal embed contacts Google and sets cookies on every page view, which
+      would directly contradict the privacy page's claim that Hush's site does
+      no tracking. Click-to-play plus youtube-nocookie.com keeps that true.
+    -->
+    <figure class="demo" style="margin:0; padding:0; border:0; background:none">
+      <div class="video-frame" id="videoFrame" data-yt="">
+        <div class="video-empty" id="videoEmpty">Demo video coming soon.</div>
+      </div>
+    </figure>
+  </div>
+</section>
+
 <section id="try">
   <div class="wrap">
     <h2>Try it on your own audio.</h2>
@@ -894,20 +1009,20 @@ footer .spacer { margin-left: auto; }
       <button class="switch" id="billToggle" role="switch" aria-checked="true"
               aria-label="Switch between monthly and annual billing"><i></i></button>
       <span id="labAnnual" class="on">Annual</span>
-      <span class="pill">SAVE 20%</span>
+      <span class="pill" id="savePill">SAVE 17%</span>
     </div>
 
     <div class="price-card">
       <div class="price-main">
-        <span class="price-was" id="priceWas">$228</span>
-        <span class="price-now" id="priceNow">$182</span>
+        <span class="price-was" id="priceWas">&pound;228</span>
+        <span class="price-now" id="priceNow">&pound;190</span>
         <span class="price-per" id="pricePer">/year</span>
       </div>
-      <p class="price-sub" id="priceSub">Billed yearly &middot; works out at $15.17/month</p>
+      <p class="price-sub" id="priceSub">Billed yearly &middot; works out at &pound;15.83/month</p>
 
       <a class="btn glow" href="BUY-LINK-HERE" id="priceBuy">Get Hush</a>
 
-      <p class="price-save" id="priceSave">Save $46 compared to monthly</p>
+      <p class="price-save" id="priceSave">2 months free &middot; save &pound;38 compared to monthly</p>
 
       <ul class="includes">
         <li>Unlimited sequences, unlimited length</li>
@@ -1308,6 +1423,9 @@ function waveform(seed, segments, duration) {
   var svg  = fan.querySelector('svg');
   var n = CH.length;
 
+  var still = window.matchMedia &&
+              window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   CH.forEach(function (c, i) {
     var row = document.createElement('div');
     row.className = 'out';
@@ -1331,11 +1449,65 @@ function waveform(seed, segments, duration) {
 
     // viewBox is 0..100 x 0..210, non-uniform: x is a percentage, y is pixels.
     var y = (i * (210 / n)) + (210 / n / 2);
-    var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    var NS = 'http://www.w3.org/2000/svg';
+    var path = document.createElementNS(NS, 'path');
+    path.setAttribute('id', 'fanPath' + i);
     path.setAttribute('d', 'M 0 105 C 45 105, 55 ' + y + ', 100 ' + y);
     path.setAttribute('vector-effect', 'non-scaling-stroke');
     svg.appendChild(path);
+
+    if (still) return;   // reduced motion: the curves alone say it
+
+    /*
+     * A pulse running each curve, out from the file to its channel.
+     *
+     * Drawn as a short dash rather than a dot on purpose: this viewBox is
+     * scaled non-uniformly (x is a percentage of the width, y is pixels), so a
+     * circle would render as a wide flat ellipse. A dash is already the shape
+     * that distortion produces, and it reads as a signal travelling.
+     *
+     * SMIL rather than CSS offset-path: it follows the same <path> element the
+     * curve is drawn from, so the motion cannot drift out of sync with the line
+     * it is meant to be running along.
+     */
+    var spark = document.createElementNS(NS, 'rect');
+    spark.setAttribute('class', 'spark');
+    spark.setAttribute('x', '-0.6');
+    spark.setAttribute('y', '-3');
+    spark.setAttribute('width', '1.2');
+    spark.setAttribute('height', '6');
+    spark.setAttribute('rx', '0.5');
+
+    var move = document.createElementNS(NS, 'animateMotion');
+    move.setAttribute('dur', '2.8s');
+    move.setAttribute('repeatCount', 'indefinite');
+    move.setAttribute('begin', (i * 0.1) + 's');
+    move.setAttribute('calcMode', 'spline');
+    move.setAttribute('keyPoints', '0;1');
+    move.setAttribute('keyTimes', '0;1');
+    move.setAttribute('keySplines', '.45 0 .25 1');
+
+    var mp = document.createElementNS(NS, 'mpath');
+    mp.setAttribute('href', '#fanPath' + i);
+    mp.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#fanPath' + i);
+    move.appendChild(mp);
+    spark.appendChild(move);
+
+    // Fade in as it leaves the file and out as it lands, so it does not
+    // reappear at the start with a visible jump.
+    var fade = document.createElementNS(NS, 'animate');
+    fade.setAttribute('attributeName', 'opacity');
+    fade.setAttribute('dur', '2.8s');
+    fade.setAttribute('repeatCount', 'indefinite');
+    fade.setAttribute('begin', (i * 0.1) + 's');
+    fade.setAttribute('values', '0;1;1;0');
+    fade.setAttribute('keyTimes', '0;0.12;0.72;1');
+    spark.appendChild(fade);
+
+    svg.appendChild(spark);
   });
+
+  if (!still) fan.classList.add('lit');
 
   // The lines start at the file block, which sits 148px wide plus a gap.
   svg.style.left = '160px';
@@ -1370,6 +1542,58 @@ function waveform(seed, segments, duration) {
 
   [].forEach.call(targets, function (t) { io.observe(t); });
 })();
+
+/* ---------------------------------------------------------------------------
+   Counting the headline numbers up as they come into view.
+
+   The text in the HTML is the real value and stays there - the counter reads
+   it, animates to it, and puts it back exactly. So a browser with no
+   IntersectionObserver, no JavaScript, or reduced motion set shows the correct
+   figure rather than a zero that never moves.
+--------------------------------------------------------------------------- */
+(function () {
+  var nums = document.querySelectorAll('.stat b');
+  if (!nums.length) return;
+
+  var still = window.matchMedia &&
+              window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (still || !('IntersectionObserver' in window)) return;
+
+  function run(el) {
+    var final = el.textContent;
+    // Split into everything-before, the number, everything-after: "70 s",
+    // "8,900" and "£19/mo" all have to survive the round trip.
+    var m = final.match(/^(\D*)([\d,.]+)(.*)$/);
+    if (!m) return;
+
+    var target = parseFloat(m[2].replace(/,/g, ''));
+    if (!isFinite(target) || target <= 0) return;   // nothing to count to
+
+    var grouped = m[2].indexOf(',') >= 0;
+    var t0 = null, DUR = 1100;
+
+    function frame(now) {
+      if (t0 === null) t0 = now;
+      var k = Math.min(1, (now - t0) / DUR);
+      var eased = 1 - Math.pow(1 - k, 3);     // fast, then settling
+      var v = Math.round(target * eased);
+      el.textContent = m[1] + (grouped ? v.toLocaleString('en-GB') : v) + m[3];
+      if (k < 1) requestAnimationFrame(frame);
+      else el.textContent = final;            // exact, not a rounding artefact
+    }
+    requestAnimationFrame(frame);
+  }
+
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      run(e.target);
+      io.unobserve(e.target);
+    });
+  }, { threshold: 0.6 });
+
+  [].forEach.call(nums, function (n) { io.observe(n); });
+})();
 </script>
 
 <script>
@@ -1382,20 +1606,37 @@ function waveform(seed, segments, duration) {
    about to pay.
 --------------------------------------------------------------------------- */
 (function () {
-  var MONTHLY  = 19;      /* PRICE-HERE - change this one number */
-  var DISCOUNT = 0.20;    /* annual discount, 0.20 = 20% off */
+  /* PRICE-HERE - these three lines are the whole pricing model. */
+  var CURRENCY    = '\u00a3';   /* \u00a3 pounds, $ dollars, \u20ac euros */
+  var MONTHLY     = 19;
+  var MONTHS_FREE = 2;           /* annual = (12 - this) months */
 
   var sw = document.getElementById('billToggle');
   if (!sw) return;
 
+  /*
+   * Annual is priced as "two months free" rather than as a percentage.
+   *
+   * A flat 20% off \u00a319 is \u00a3182.40 - a number nobody wants on a pricing
+   * page, and one that changes shape the moment the monthly price does. Months
+   * free stays clean at any price and in any currency: \u00a319 gives \u00a3190,
+   * \u00a315 gives \u00a3150, $25 gives $250. It is also easier to say out loud,
+   * which matters more than the extra three percent.
+   */
   var fullYear = MONTHLY * 12;
-  var year     = Math.round(fullYear * (1 - DISCOUNT));
+  var year     = MONTHLY * (12 - MONTHS_FREE);
   var saving   = fullYear - year;
+  var pct      = Math.round(saving / fullYear * 100);
 
   function money(n) {
-    // Whole pounds/dollars where possible; editors do not need the pennies.
-    return '$' + (n % 1 === 0 ? n : n.toFixed(2));
+    // Whole units where possible; editors do not need the pennies.
+    return CURRENCY + (n % 1 === 0 ? n : n.toFixed(2));
   }
+
+  // The badge states the discount the arithmetic actually produces, rather
+  // than a round number typed in beside it that quietly stops being true.
+  var badge = document.getElementById('savePill');
+  if (badge) badge.textContent = 'SAVE ' + pct + '%';
 
   function render(annual) {
     sw.setAttribute('aria-checked', String(annual));
@@ -1415,13 +1656,15 @@ function waveform(seed, segments, duration) {
       per.textContent  = '/year';
       sub.textContent  = 'Billed yearly \u00b7 works out at ' +
                          money(+(year / 12).toFixed(2)) + '/month';
-      save.textContent = 'Save ' + money(saving) + ' compared to monthly';
+      save.textContent = MONTHS_FREE + ' months free \u00b7 save ' +
+                         money(saving) + ' compared to monthly';
     } else {
       was.style.display = 'none';
       now.textContent  = money(MONTHLY);
       per.textContent  = '/month';
       sub.textContent  = 'Billed monthly \u00b7 cancel any time';
-      save.textContent = 'Switch to annual and save ' + money(saving) + ' a year';
+      save.textContent = 'Switch to annual for ' + MONTHS_FREE +
+                         ' months free \u2014 ' + money(saving) + ' a year';
     }
   }
 
@@ -1432,6 +1675,48 @@ function waveform(seed, segments, duration) {
   // Annual first: it is the better deal, and showing it first is the whole
   // point of the toggle.
   render(true);
+})();
+</script>
+
+<script>
+/* ---------------------------------------------------------------------------
+   Click-to-play YouTube, with nothing loaded from Google until asked.
+--------------------------------------------------------------------------- */
+(function () {
+  var frame = document.getElementById('videoFrame');
+  if (!frame) return;
+
+  var id = (frame.getAttribute('data-yt') || '').trim();
+  if (!id) return;                      // no video yet: leave the placeholder
+
+  var empty = document.getElementById('videoEmpty');
+  if (empty) empty.remove();
+
+  var thumb = document.createElement('img');
+  thumb.src = 'https://i.ytimg.com/vi/' + id + '/maxresdefault.jpg';
+  thumb.alt = 'Hush running on a real episode';
+  thumb.loading = 'lazy';
+  // Not every video has a maxres thumbnail; fall back rather than show a gap.
+  thumb.onerror = function () { thumb.src = 'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg'; };
+
+  var play = document.createElement('button');
+  play.className = 'play';
+  play.type = 'button';
+  play.setAttribute('aria-label', 'Play the demo video');
+
+  frame.appendChild(thumb);
+  frame.appendChild(play);
+
+  frame.addEventListener('click', function () {
+    var f = document.createElement('iframe');
+    f.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&rel=0';
+    f.title = 'Hush demo';
+    f.allow = 'accelerometer; autoplay; encrypted-media; picture-in-picture';
+    f.allowFullscreen = true;
+    frame.innerHTML = '';
+    frame.appendChild(f);
+    frame.style.cursor = 'default';
+  });
 })();
 </script>
 
