@@ -329,13 +329,13 @@ h1 .grad {
 
 /* ------------------------------------------------- fan-out animation */
 /*
- * Sparks run the curves from the file block out to each channel, and the
- * clips on a strip brighten as its spark lands. The point being made is
- * "one file becomes five separate tracks", so the motion has to travel
- * outward - a strip that just pulses on its own says nothing.
+ * The connection is drawn, then the track it leads to appears.
+ *
+ * An earlier version sent a moving dot down each curve. It read as data being
+ * shuttled about rather than as one file being split, and it drew the eye to
+ * the dot instead of to the tracks. Drawing the line itself and then revealing
+ * what it arrived at says the same thing with nothing extra moving.
  */
-.fan svg .spark { fill: var(--neon); }
-
 /*
  * The order matters more than the motion.
  *
@@ -361,17 +361,51 @@ h1 .grad {
   z-index: 2;                      /* above the clips while it is showing */
 }
 
-.fan.lit .out .strip .full { animation: chFull 3.4s ease-in-out infinite; }
-.fan.lit .out .strip i     { animation: chLight 3.4s ease-in-out infinite; }
+/*
+ * One 4s cycle, per channel, staggered by --i:
+ *   line draws out from the file  ->  the track appears, whole
+ *   ->  Hush cuts it  ->  rest, then round again.
+ * Each stage waits for the one before it, because the order IS the claim.
+ */
+.fan svg path { stroke: #3d3d3d; }
+.fan.lit svg path {
+  animation: fanDraw 4s ease-in-out infinite;
+  animation-delay: calc(var(--i) * .12s);
+}
+@keyframes fanDraw {
+  0%        { stroke-dashoffset: var(--len, 999); }
+  0%        { opacity: .35; }
+  18%, 92%  { stroke-dashoffset: 0; opacity: 1; }
+  100%      { stroke-dashoffset: 0; opacity: .35; }
+}
 
-@keyframes chFull {          /* the channel arriving whole */
-  0%, 20%   { opacity: 0; }
-  30%, 48%  { opacity: 1; }
-  60%, 100% { opacity: 0; }
+.fan .out { opacity: 0; }
+.fan.lit .out {
+  animation: fanRow 4s ease-in-out infinite;
+  animation-delay: calc(var(--i) * .12s);
+}
+@keyframes fanRow {          /* the track arrives once its line lands */
+  0%, 16%   { opacity: 0; transform: translateX(-6px); }
+  24%, 94%  { opacity: 1; transform: none; }
+  100%      { opacity: 0; transform: translateX(-6px); }
+}
+
+.fan.lit .out .strip .full {
+  animation: chFull 4s ease-in-out infinite;
+  animation-delay: calc(var(--i) * .12s);
+}
+.fan.lit .out .strip i {
+  animation: chLight 4s ease-in-out infinite;
+  animation-delay: calc(var(--i) * .12s);
+}
+@keyframes chFull {          /* whole and uncut, as the recorder made it */
+  0%, 22%   { opacity: 0; }
+  30%, 50%  { opacity: 1; }
+  62%, 100% { opacity: 0; }
 }
 @keyframes chLight {         /* and then only the speech surviving */
-  0%, 46%   { background: var(--clip-mute); }
-  58%, 88%  { background: var(--live); }
+  0%, 48%   { background: var(--clip-mute); }
+  60%, 90%  { background: var(--live); }
   100%      { background: var(--clip-mute); }
 }
 
@@ -417,6 +451,8 @@ h1 .grad {
 @media (prefers-reduced-motion: reduce) {
   .fan.lit .out .strip i { animation: none; background: var(--live); }
   .fan.lit .out .strip .full { animation: none; opacity: 0; }
+  .fan .out, .fan.lit .out { opacity: 1; animation: none; transform: none; }
+  .fan.lit svg path { animation: none; opacity: 1; }
   .in .bar-fill.meter { animation: none; transform: scaleX(1); }
   .in .cmp-fill { transform: scaleX(1); }
 }
@@ -1506,8 +1542,17 @@ function waveform(seed, segments, duration) {
 })();
 
 /* ---------------------------------------------------------------------------
-   One file fanning out into five tracks. The curves are drawn to wherever the
-   rows land, so the layout stays honest at any width.
+   One file fanning out into five tracks.
+
+   The lines are measured, not guessed. They start at the right edge of the
+   file block and stop exactly at the left edge of the first strip, so nothing
+   runs underneath a track - and because both edges are read from the layout,
+   that stays true at any width rather than only at the one I happened to test.
+
+   The viewBox is set to the measured pixel size too. The old one was a fixed
+   0..100 x 0..210 stretched over a much wider box, which scaled x and y by
+   different amounts: circles came out as ellipses and any dash length was
+   wrong. At 1:1 the stroke dash that draws each line is exact.
 --------------------------------------------------------------------------- */
 (function () {
   var fan = document.getElementById('fanDemo');
@@ -1523,15 +1568,19 @@ function waveform(seed, segments, duration) {
 
   var outs = fan.querySelector('.outs');
   var svg  = fan.querySelector('svg');
-  var n = CH.length;
+  var n    = CH.length;
+  var NS   = 'http://www.w3.org/2000/svg';
 
   var still = window.matchMedia &&
               window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // ---------------------------------------------------------- the rows
+  outs.innerHTML = '';
   CH.forEach(function (c, i) {
     var row = document.createElement('div');
     row.className = 'out';
     row.style.top = (i * (100 / n) + (100 / n / 2) - 6) + '%';
+    row.style.setProperty('--i', i);
 
     var ch = document.createElement('span');
     ch.className = 'ch';
@@ -1540,8 +1589,8 @@ function waveform(seed, segments, duration) {
     var strip = document.createElement('span');
     strip.className = 'strip';
 
-    // Sits behind the clips and covers the whole channel: the recording as it
-    // arrived, before Hush touched it.
+    // Sits behind nothing and above the clips: the channel as the recorder
+    // made it, before Hush cut anything out of it.
     var full = document.createElement('i');
     full.className = 'full';
     strip.appendChild(full);
@@ -1553,75 +1602,70 @@ function waveform(seed, segments, duration) {
       strip.appendChild(b);
     });
 
-    row.appendChild(ch); row.appendChild(strip);
+    row.appendChild(ch);
+    row.appendChild(strip);
     outs.appendChild(row);
-
-    // viewBox is 0..100 x 0..210, non-uniform: x is a percentage, y is pixels.
-    var y = (i * (210 / n)) + (210 / n / 2);
-    var NS = 'http://www.w3.org/2000/svg';
-    var path = document.createElementNS(NS, 'path');
-    path.setAttribute('id', 'fanPath' + i);
-    path.setAttribute('d', 'M 0 105 C 45 105, 55 ' + y + ', 100 ' + y);
-    path.setAttribute('vector-effect', 'non-scaling-stroke');
-    svg.appendChild(path);
-
-    if (still) return;   // reduced motion: the curves alone say it
-
-    /*
-     * A pulse running each curve, out from the file to its channel.
-     *
-     * Drawn as a short dash rather than a dot on purpose: this viewBox is
-     * scaled non-uniformly (x is a percentage of the width, y is pixels), so a
-     * circle would render as a wide flat ellipse. A dash is already the shape
-     * that distortion produces, and it reads as a signal travelling.
-     *
-     * SMIL rather than CSS offset-path: it follows the same <path> element the
-     * curve is drawn from, so the motion cannot drift out of sync with the line
-     * it is meant to be running along.
-     */
-    var spark = document.createElementNS(NS, 'rect');
-    spark.setAttribute('class', 'spark');
-    spark.setAttribute('x', '-0.6');
-    spark.setAttribute('y', '-3');
-    spark.setAttribute('width', '1.2');
-    spark.setAttribute('height', '6');
-    spark.setAttribute('rx', '0.5');
-
-    var move = document.createElementNS(NS, 'animateMotion');
-    move.setAttribute('dur', '3.4s');
-    move.setAttribute('repeatCount', 'indefinite');
-    move.setAttribute('begin', (i * 0.1) + 's');
-    move.setAttribute('calcMode', 'spline');
-    move.setAttribute('keyPoints', '0;1');
-    move.setAttribute('keyTimes', '0;1');
-    move.setAttribute('keySplines', '.45 0 .25 1');
-
-    var mp = document.createElementNS(NS, 'mpath');
-    mp.setAttribute('href', '#fanPath' + i);
-    mp.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#fanPath' + i);
-    move.appendChild(mp);
-    spark.appendChild(move);
-
-    // Fade in as it leaves the file and out as it lands, so it does not
-    // reappear at the start with a visible jump.
-    var fade = document.createElementNS(NS, 'animate');
-    fade.setAttribute('attributeName', 'opacity');
-    fade.setAttribute('dur', '3.4s');
-    fade.setAttribute('repeatCount', 'indefinite');
-    fade.setAttribute('begin', (i * 0.1) + 's');
-    fade.setAttribute('values', '0;1;1;0');   /* lands as the channel fills */
-    fade.setAttribute('keyTimes', '0;0.10;0.30;0.42');
-    fade.setAttribute('fill', 'freeze');
-    spark.appendChild(fade);
-
-    svg.appendChild(spark);
   });
 
+  // ------------------------------------------------- the lines between
+  function drawLines() {
+    var fanBox   = fan.getBoundingClientRect();
+    var fileBox  = fan.querySelector('.file').getBoundingClientRect();
+    var firstRow = outs.querySelector('.strip');
+    if (!firstRow) return;
+    var stripBox = firstRow.getBoundingClientRect();
+
+    var x0 = (fileBox.right - fanBox.left) + 6;      // just off the file block
+    var x1 = (stripBox.left - fanBox.left) - 2;      // just short of the track
+    var w  = Math.max(24, x1 - x0);
+    var hgt = fanBox.height;
+
+    svg.setAttribute('viewBox', '0 0 ' + w + ' ' + hgt);
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.style.left  = x0 + 'px';
+    svg.style.width = w + 'px';
+
+    svg.innerHTML = '';
+    CH.forEach(function (c, i) {
+      var rowBox = outs.children[i].querySelector('.strip').getBoundingClientRect();
+      var y = (rowBox.top + rowBox.height / 2) - fanBox.top;
+
+      var path = document.createElementNS(NS, 'path');
+      path.setAttribute('d',
+        'M 0 ' + (hgt / 2) +
+        ' C ' + (w * 0.55) + ' ' + (hgt / 2) + ', ' +
+                (w * 0.45) + ' ' + y + ', ' + w + ' ' + y);
+      path.setAttribute('vector-effect', 'non-scaling-stroke');
+
+      // Now that the box is 1:1, the path length is a real pixel length, so
+      // the dash that draws it is exactly the length of the line.
+      var len = path.getTotalLength();
+      path.style.strokeDasharray = len;
+      path.style.setProperty('--len', len);
+      path.style.setProperty('--i', i);
+      if (still) path.style.strokeDashoffset = 0;
+
+      svg.appendChild(path);
+    });
+  }
+
+  drawLines();
   if (!still) fan.classList.add('lit');
 
-  // The lines start at the file block, which sits 148px wide plus a gap.
-  svg.style.left = '160px';
-  svg.style.width = 'calc(100% - 200px)';
+  // Re-measure on resize: the strips move, so the lines have to follow.
+  var t;
+  window.addEventListener('resize', function () {
+    clearTimeout(t);
+    t = setTimeout(function () {
+      fan.classList.remove('lit');
+      drawLines();
+      if (!still) {
+        // reflow, so the draw animation restarts from the beginning
+        void fan.offsetWidth;
+        fan.classList.add('lit');
+      }
+    }, 150);
+  });
 })();
 </script>
 
