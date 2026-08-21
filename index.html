@@ -171,7 +171,7 @@ section p.lede { color: var(--muted); max-width: 40em; margin: 0 0 30px; }
 .bar-row { display: flex; align-items: center; gap: 12px; font-size: 12.5px; }
 .bar-label { width: 92px; flex: none; color: var(--muted); }
 .bar-outer { flex: 1; height: 9px; background: #262626; border-radius: 100px; overflow: hidden; }
-.bar-fill { height: 100%; border-radius: 100px; background: var(--live); }
+.bar-fill { display: block; height: 100%; border-radius: 100px; background: var(--live); }
 .bar-fill.spill { background: #6b4a2a; }
 .bar-num { width: 74px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
 
@@ -207,7 +207,7 @@ section p.lede { color: var(--muted); max-width: 40em; margin: 0 0 30px; }
 .cmp-pair { display: grid; gap: 5px; }
 .cmp-bar { display: flex; align-items: center; gap: 9px; font-size: 11.5px; }
 .cmp-outer { flex: 1; height: 13px; background: #262626; border-radius: 3px; overflow: hidden; }
-.cmp-fill { height: 100%; border-radius: 3px; }
+.cmp-fill { display: block; height: 100%; border-radius: 3px; }
 .cmp-fill.was { background: #4a4a4a; }
 .cmp-fill.now { background: var(--live); }
 .cmp-fill.bad { background: #6b4a2a; }
@@ -215,6 +215,75 @@ section p.lede { color: var(--muted); max-width: 40em; margin: 0 0 30px; }
 .cmp-num { width: 56px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
 .cmp-row + .cmp-row { border-top: 1px solid var(--line); padding-top: 15px; }
 @media (max-width: 560px) { .cmp-row { grid-template-columns: 1fr; gap: 7px; } }
+
+
+/* ------------------------------------------------------- bar animation */
+/*
+ * Bars grow when they scroll into view rather than on load, so the movement
+ * is seen rather than missed. scaleX is used instead of width because it is
+ * composited - width would relayout every frame.
+ */
+.bar-fill, .cmp-fill {
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform .95s cubic-bezier(.22,.61,.36,1);
+}
+.in .bar-fill, .in .cmp-fill { transform: scaleX(1); }
+.in .cmp-fill.now { transition-delay: .28s; }   /* "after" lands second, so the change reads */
+.in .bar-fill.spill { transition-delay: .18s; }
+
+.cmp-num, .bar-num { opacity: 0; transition: opacity .5s ease .55s; }
+.in .cmp-num, .in .bar-num { opacity: 1; }
+
+/* --------------------------------------------------- arrival animation */
+@keyframes ripple {
+  0%   { opacity: 0;   transform: scale(.70); }
+  15%  { opacity: .55; }
+  72%  { opacity: .10; }
+  100% { opacity: 0;   transform: scale(1.14); }
+}
+.dist .wave {
+  transform-box: view-box;
+  transform-origin: 120px 96px;
+  animation: ripple 3.2s ease-out infinite;
+}
+.dist .wave:nth-of-type(1) { animation-delay: 0s; }
+.dist .wave:nth-of-type(2) { animation-delay: .64s; }
+.dist .wave:nth-of-type(3) { animation-delay: 1.28s; }
+.dist .wave:nth-of-type(4) { animation-delay: 1.92s; }
+.dist .wave:nth-of-type(5) { animation-delay: 2.56s; }
+
+/* The two arrivals, lit in the order they happen. The real gap is 2.6 ms -
+   far too short to see - so it is stretched here. The ORDER is the true part,
+   not the interval. */
+@keyframes hit {
+  0%, 40%   { opacity: .18; }
+  46%, 62%  { opacity: 1; }
+  100%      { opacity: .18; }
+}
+.dist .pulse  { animation: hit 3.2s ease-out infinite; animation-delay: 1.05s; }
+.dist .pulseB { animation: hit 3.2s ease-out infinite; animation-delay: 1.30s; }
+
+/* A dot running the gap between the two mics, so the delay has a direction. */
+@keyframes travel {
+  0%, 32%  { opacity: 0; transform: translateX(0); }
+  38%      { opacity: 1; }
+  58%      { opacity: 1; transform: translateX(252px); }
+  64%, 100%{ opacity: 0; transform: translateX(252px); }
+}
+.dist .trav {
+  fill: #4a9eff;
+  transform-box: view-box;
+  animation: travel 3.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar-fill, .cmp-fill { transform: none; transition: none; }
+  .cmp-num, .bar-num { opacity: 1; transition: none; }
+  .dist .wave, .dist .pulse, .dist .pulseB, .dist .trav { animation: none; }
+  .dist .wave { opacity: .38; }
+  .dist .trav { opacity: 0; }
+}
 
 /* ------------------------------------------------------- settings playground */
 .play { display: grid; grid-template-columns: 210px 1fr; gap: 22px; }
@@ -535,6 +604,7 @@ footer .spacer { margin-left: auto; }
         <!-- distance rules -->
         <line class="rule" x1="120" y1="96" x2="292" y2="96"/>
         <line class="lead" x1="344" y1="96" x2="596" y2="96"/>
+        <circle class="trav" cx="344" cy="96" r="4"/>
 
         <!-- arrival strip -->
         <line class="rule" x1="40" y1="176" x2="660" y2="176"/>
@@ -1104,6 +1174,35 @@ function waveform(seed, segments, duration) {
   // The lines start at the file block, which sits 148px wide plus a gap.
   svg.style.left = '160px';
   svg.style.width = 'calc(100% - 200px)';
+})();
+</script>
+
+<script>
+/* ---------------------------------------------------------------------------
+   Reveal the measured bars when they scroll into view.
+
+   On load they would animate while off screen and be over before anyone
+   looked. Falls back to simply showing them if IntersectionObserver is absent,
+   because a bar that never appears is far worse than one that never animates.
+--------------------------------------------------------------------------- */
+(function () {
+  var targets = document.querySelectorAll('.bars, .cmp');
+  if (!targets.length) return;
+
+  if (!('IntersectionObserver' in window)) {
+    [].forEach.call(targets, function (t) { t.classList.add('in'); });
+    return;
+  }
+
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      e.target.classList.add('in');
+      io.unobserve(e.target);   // once only; re-running on every scroll is noise
+    });
+  }, { threshold: 0.35 });
+
+  [].forEach.call(targets, function (t) { io.observe(t); });
 })();
 </script>
 
