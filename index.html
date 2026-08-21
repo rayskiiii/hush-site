@@ -243,10 +243,20 @@ section p.lede { color: var(--muted); max-width: 40em; margin: 0 0 30px; }
 .bar-num { width: 74px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
 
 /* ---------------------------------------------------------------- speed */
+/*
+ * auto-fit put three cards into two columns on a phone and left the fourth
+ * cell empty, which reads as a card that failed to load. One column below
+ * 560px: three full-width rows, nothing missing.
+ */
 .stat-grid {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 1px; background: var(--line);
   border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+}
+@media (max-width: 560px) {
+  .stat-grid { grid-template-columns: 1fr; }
+  .stat { padding: 16px 18px; }
+  .stat b { font-size: 24px; }
 }
 .stat { background: var(--panel); padding: 20px 18px; }
 .stat b { display: block; font-size: 27px; letter-spacing: -.02em; margin-bottom: 3px; }
@@ -335,11 +345,20 @@ h1 .grad {
  * and only then does it resolve into clips. The uncut moment is the audio as
  * the recorder made it; the cut that follows is the product.
  */
+/*
+ * 🔴 z-index, not DOM order.
+ *
+ * The full bar is created first and the clips after it, so without this the
+ * clips paint ON TOP of it: at the "uncut" moment you saw a green strip with
+ * dark clips punched out of it - the inverse of the point being made. The
+ * whole channel has to be solid green before anything is cut out of it.
+ */
 .fan .out .strip { position: relative; }
-.fan .out .strip i { background: #3f5a28; }
+.fan .out .strip i { background: var(--clip-mute); position: relative; z-index: 1; }
 .fan .out .strip .full {
   position: absolute; left: 0; right: 0; top: 0; bottom: 0;
   width: auto; background: var(--live); opacity: 0;
+  z-index: 2;                      /* above the clips while it is showing */
 }
 
 .fan.lit .out .strip .full { animation: chFull 3.4s ease-in-out infinite; }
@@ -351,9 +370,9 @@ h1 .grad {
   60%, 100% { opacity: 0; }
 }
 @keyframes chLight {         /* and then only the speech surviving */
-  0%, 46%   { background: #3f5a28; }
+  0%, 46%   { background: var(--clip-mute); }
   58%, 88%  { background: var(--live); }
-  100%      { background: #3f5a28; }
+  100%      { background: var(--clip-mute); }
 }
 
 /* ------------------------------------------------------ live meters */
