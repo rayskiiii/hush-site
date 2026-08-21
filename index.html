@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hush — automatic multi-mic audio cleanup for Premiere Pro</title>
+<meta name="description" content="Hush mutes each microphone when its owner isn't speaking, across a whole podcast or interview, in seconds. A Premiere Pro extension for macOS.">
+
+<meta property="og:title" content="Hush — automatic multi-mic audio cleanup for Premiere Pro">
+<meta property="og:description" content="Mutes each microphone when its owner isn't speaking, across a whole episode, in seconds.">
+<meta property="og:type" content="website">
+
+<!--
+  ═══════════════════════════════════════════════════════════════════════
+  EDIT THESE THREE THINGS AND THE PAGE IS YOURS
+  ═══════════════════════════════════════════════════════════════════════
+
+  1. PRICE ..... search for "PRICE-HERE". $19/mo is a placeholder, not a
+                 recommendation. AutoPod sits around $30/mo and does more
+                 things; Hush does one thing well. Pick your own number.
+  2. BUY LINK .. search for "BUY-LINK-HERE". Paste the Lemon Squeezy
+                 checkout URL. The same URL goes in js/licence.js.
+  3. EMAIL ..... search for "EMAIL-HERE". A real inbox you read.
+
+  Everything is in this one file. No build step, no dependencies.
+  ═══════════════════════════════════════════════════════════════════════
+-->
+
+<style>
+  :root {
+    --bg:      #17181a;
+    --panel:   #1f2124;
+    --line:    #2e3135;
+    --ink:     #e8e8e8;
+    --ink-dim: #8d8d8d;
+    --ink-mid: #b4b4b4;
+    --gold:    #d8b23c;
+    --gold-dk: #8a7a3c;
+    --green:   #6ec06e;
+    --red:     #d05050;
+    --blue:    #3a97f0;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+
+  a { color: var(--gold); }
+  a:hover { color: #e6c04a; }
+
+  h1, h2, h3 { line-height: 1.25; font-weight: 600; }
+
+  /* ---------------------------------------------------------------- hero */
+
+  header {
+    padding: 72px 0 56px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .mark {
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold-dk);
+    margin-bottom: 20px;
+  }
+
+  h1 {
+    font-size: 42px;
+    margin: 0 0 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .lede {
+    font-size: 20px;
+    color: var(--ink-mid);
+    margin: 0 0 32px;
+    max-width: 620px;
+  }
+
+  .cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+
+  .btn {
+    display: inline-block;
+    padding: 13px 26px;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid transparent;
+  }
+
+  .btn-primary { background: var(--gold); color: #1a1a1a; }
+  .btn-primary:hover { background: #e6c04a; color: #1a1a1a; }
+
+  .btn-ghost { border-color: var(--line); color: var(--ink); }
+  .btn-ghost:hover { border-color: var(--ink-dim); color: var(--ink); }
+
+  .cta-note { font-size: 14px; color: var(--ink-dim); margin-top: 14px; }
+
+  /* ------------------------------------------------------------ sections */
+
+  section { padding: 56px 0; border-bottom: 1px solid var(--line); }
+
+  h2 { font-size: 26px; margin: 0 0 18px; }
+  h3 { font-size: 17px; margin: 28px 0 8px; }
+
+  p { margin: 0 0 16px; color: var(--ink-mid); }
+  p.tight { margin-bottom: 8px; }
+
+  strong { color: var(--ink); font-weight: 600; }
+
+  ul { margin: 0 0 16px; padding-left: 22px; color: var(--ink-mid); }
+  li { margin-bottom: 8px; }
+
+  /* --------------------------------------------------------------- stats */
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin: 28px 0 8px;
+  }
+
+  .stat {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 20px;
+  }
+
+  .stat-num {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+  }
+
+  .stat-num .from {
+    color: var(--ink-dim);
+    font-size: 17px;
+    font-weight: 400;
+  }
+
+  .stat-label {
+    font-size: 13px;
+    color: var(--ink-dim);
+    margin-top: 6px;
+    line-height: 1.45;
+  }
+
+  .measured {
+    font-size: 13px;
+    color: var(--ink-dim);
+    border-left: 2px solid var(--gold-dk);
+    padding-left: 14px;
+    margin-top: 22px;
+  }
+
+  /* --------------------------------------------------------------- steps */
+
+  ol.steps { counter-reset: s; list-style: none; padding: 0; margin: 24px 0 0; }
+
+  ol.steps li {
+    counter-increment: s;
+    position: relative;
+    padding-left: 44px;
+    margin-bottom: 22px;
+    color: var(--ink-mid);
+  }
+
+  ol.steps li::before {
+    content: counter(s);
+    position: absolute;
+    left: 0; top: 0;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--gold);
+    font-size: 13px;
+    font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  ol.steps b { color: var(--ink); display: block; margin-bottom: 3px; font-weight: 600; }
+
+  /* ------------------------------------------------------------- pricing */
+
+  .price-card {
+    background: var(--panel);
+    border: 1px solid var(--gold-dk);
+    border-radius: 10px;
+    padding: 32px;
+    text-align: center;
+  }
+
+  .price {
+    font-size: 46px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+  }
+
+  .price span { font-size: 17px; color: var(--ink-dim); font-weight: 400; }
+
+  .price-sub { color: var(--ink-dim); font-size: 14px; margin: 6px 0 24px; }
+
+  .includes {
+    list-style: none;
+    padding: 0;
+    margin: 26px 0 0;
+    text-align: left;
+    display: inline-block;
+  }
+
+  .includes li { padding-left: 24px; position: relative; }
+  .includes li::before {
+    content: "✓";
+    position: absolute; left: 0;
+    color: var(--green);
+  }
+
+  /* ----------------------------------------------------------------- faq */
+
+  details {
+    border-bottom: 1px solid var(--line);
+    padding: 16px 0;
+  }
+  details:first-of-type { border-top: 1px solid var(--line); }
+
+  summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 16px;
+    list-style: none;
+    padding-right: 26px;
+    position: relative;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after {
+    content: "+";
+    position: absolute; right: 4px; top: -2px;
+    color: var(--gold-dk);
+    font-size: 20px;
+    font-weight: 400;
+  }
+  details[open] summary::after { content: "–"; }
+  details > *:not(summary) { margin-top: 14px; }
+  details p:last-child { margin-bottom: 0; }
+
+  /* -------------------------------------------------------------- footer */
+
+  footer {
+    padding: 40px 0 64px;
+    color: var(--ink-dim);
+    font-size: 14px;
+  }
+  footer a { color: var(--ink-mid); }
+  .foot-row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 18px; }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 32px; }
+    .lede { font-size: 18px; }
+    header { padding: 48px 0 40px; }
+    section { padding: 42px 0; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="mark">For Adobe Premiere Pro · macOS</div>
+    <h1>Every mic open is every mic bleeding.</h1>
+    <p class="lede">
+      Hush listens to a multi-microphone recording, works out who is actually
+      speaking at each moment, and mutes everyone else — across a whole episode,
+      in seconds.
+    </p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="BUY-LINK-HERE">Get Hush</a>
+      <a class="btn btn-ghost" href="#try">Try it free first</a>
+    </div>
+    <p class="cta-note">
+      The free version runs on the first 5 minutes of any sequence. Same
+      detection, same cuts, same quality — just shorter.
+    </p>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>The problem</h2>
+    <p>
+      Four people around a table with four microphones means each mic picks up
+      all four voices. The room hum, the chair creak and the sniff during
+      someone else's answer are all recorded four times over, and they stack.
+    </p>
+    <p>
+      The fix has always been manual: scrub the timeline, find who is speaking,
+      cut around them, mute the rest. On a two-hour episode that is an
+      afternoon of work that requires attention but no thought.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>What it does to a real session</h2>
+    <p>
+      Measured on a five-microphone recording against hand-labelled ground
+      truth — a human marking who was actually speaking, second by second.
+    </p>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-num"><span class="from">19% →</span> 64%</div>
+        <div class="stat-label">of the episode has exactly one mic open, instead of several</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num"><span class="from">57.8% →</span> 15.1%</div>
+        <div class="stat-label">leakage — a mic left open over somebody else's voice</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">Seconds</div>
+        <div class="stat-label">to apply thousands of cuts and fades, not an afternoon</div>
+      </div>
+    </div>
+
+    <p class="measured">
+      Those are numbers from one real session, not a promise about yours.
+      Recordings differ enormously — which is exactly why the free version runs
+      on your own audio before you pay anything.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>How you use it</h2>
+    <ol class="steps">
+      <li>
+        <b>Open the panel</b>
+        Window → Extensions → Hush, on the sequence you are already editing.
+      </li>
+      <li>
+        <b>Tick which tracks are microphones</b>
+        Hush reads the sequence and lists them. Name them if you like.
+      </li>
+      <li>
+        <b>Say what kind of recording it is</b>
+        Mics close together? People moving around? Three checkboxes, in plain
+        English, no decibel numbers to guess at.
+      </li>
+      <li>
+        <b>Run it</b>
+        You get a new sequence with the cuts applied, and a plain-English
+        report of what happened on each mic. Your original is untouched.
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Built on measurement, not vibes</h2>
+    <p>
+      Hush decides using loudness, how much each pair of microphones agrees
+      with the other, and — where the recording allows it — <strong>which mic the
+      sound reached first</strong>. Sound takes about 3 milliseconds to travel a
+      metre, so the mic nearest the speaker hears them fractionally sooner. That
+      is often the only thing that separates two people sitting close together
+      when one has a much louder voice.
+    </p>
+    <p>
+      It also handles the awkward realities: microphones that move mid-session,
+      recorders whose clocks drift apart, and files that roll over at 4 GB
+      partway through a long recording.
+    </p>
+    <p>
+      Every change to the detection has been scored against hand-labelled
+      recordings, tracking two failure modes separately — <strong>words lost</strong>
+      and <strong>leakage let through</strong>. They are never averaged into one
+      number, because a tool that hides one behind the other is the thing that
+      ruins an edit.
+    </p>
+  </div>
+</section>
+
+<section id="try">
+  <div class="wrap">
+    <h2>Pricing</h2>
+    <div class="price-card">
+      <!-- PRICE-HERE -->
+      <div class="price">$19<span> / month</span></div>
+      <div class="price-sub">Cancel any time · VAT and sales tax included</div>
+
+      <a class="btn btn-primary" href="BUY-LINK-HERE">Get Hush</a>
+
+      <ul class="includes">
+        <li>Unlimited sequences, unlimited length</li>
+        <li>Two machines per licence — laptop and edit bay</li>
+        <li>All updates while subscribed</li>
+        <li>Keeps working offline for 14 days</li>
+      </ul>
+    </div>
+    <p class="measured">
+      <strong>Try it before you pay.</strong> Install it and run it on the first
+      5 minutes of your own audio, free, for as long as you like. Nothing is
+      held back except the length — the detection, cuts and fades are identical.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Questions</h2>
+
+    <details>
+      <summary>What kind of recordings does it work best on?</summary>
+      <p>
+        Best: everyone's microphone recorded into one device — a Zoom, Rodecaster,
+        Sound Devices or similar multichannel recorder — or separate files that
+        started at the same moment. That is where Hush can use arrival time, and
+        it makes a large difference.
+      </p>
+      <p>
+        Hardest: separate recorders started at different times, with the
+        microphones very close together. On one such session a mic picked up its
+        neighbour <em>louder than its own owner</em>, and the recorders were not
+        sample-locked, so neither loudness nor timing could separate them. Hush
+        still improves it — around 8% of words lost and 33% leakage — but it will
+        not be transformative. That is physics rather than a bug, and no setting
+        fixes it.
+      </p>
+      <p>
+        The 5-minute free mode exists precisely so you can find out which of
+        these your recordings are before paying.
+      </p>
+    </details>
+
+    <details>
+      <summary>Will it cut out words?</summary>
+      <p>
+        It is deliberately tuned to leave a mic open rather than risk clipping
+        the start of a word — losing speech is far more damaging to an edit than
+        letting a little leakage through. You can push it either way per
+        microphone with a "pick up more / pick up less" control.
+      </p>
+      <p>
+        After every run, Hush reports what happened on each microphone in plain
+        English, and flags any mic that ended up open unusually often or rarely.
+      </p>
+    </details>
+
+    <details>
+      <summary>Does it change my original sequence?</summary>
+      <p>
+        No. Hush builds a new sequence with the cuts applied and leaves yours
+        exactly as it was. If you dislike the result, delete it.
+      </p>
+      <p>
+        One thing to know: because the new sequence is created by rebuilding it
+        as a file, Premiere's importer sets its Color Setup to "Custom" with a
+        blank output colour space, which can make the new sequence
+        <em>preview</em> darker. <strong>Exports are unaffected</strong> — verified
+        by comparing rendered frames. Setting Sequence Settings → Color
+        Management → Color Setup to match your original fixes the preview, and
+        Hush reminds you on the panel after every run.
+      </p>
+    </details>
+
+    <details>
+      <summary>What do I need to run it?</summary>
+      <p>
+        macOS, and Premiere Pro 22.0 or newer. Everything needed is bundled —
+        there is nothing to install from a terminal and no separate downloads.
+      </p>
+      <p>
+        Installation is dragging one file onto a free ZXP installer.
+      </p>
+    </details>
+
+    <details>
+      <summary>How does the licence work across my machines?</summary>
+      <p>
+        One licence covers two machines. There is a "Remove from this Mac"
+        button that frees a slot, so changing computers does not require
+        emailing anybody.
+      </p>
+      <p>
+        If Hush cannot reach the licence server it keeps working for 14 days
+        rather than locking you out — an editor on a train with a valid licence
+        should still be able to cut. Only an explicit rejection from the store
+        ends access.
+      </p>
+    </details>
+
+    <details>
+      <summary>Can I get a refund?</summary>
+      <p>
+        Yes — within 14 days of purchase, no questions asked. Email
+        <a href="mailto:EMAIL-HERE">EMAIL-HERE</a> and it will be refunded.
+      </p>
+      <p>
+        Given the free 5-minute mode runs the full detection on your own audio,
+        you should know whether Hush suits your recordings before you spend
+        anything.
+      </p>
+    </details>
+
+    <details>
+      <summary>How is this different from AutoPod?</summary>
+      <p>
+        AutoPod is a broader multi-camera and audio suite. Hush does one thing —
+        deciding who is speaking and muting everyone else — and the whole design
+        is built around getting that decision right, including using arrival
+        time between microphones, which is unusual in this category.
+      </p>
+      <p>
+        If you need multi-camera switching, AutoPod does more. If the audio is
+        the part costing you an afternoon, Hush is aimed squarely at it.
+      </p>
+    </details>
+
+    <details>
+      <summary>Who makes it?</summary>
+      <p>
+        Hush is built by Xtravalake, an independent developer of Premiere Pro
+        extensions. Support goes to a person, not a queue:
+        <a href="mailto:EMAIL-HERE">EMAIL-HERE</a>.
+      </p>
+    </details>
+
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-row">
+      <a href="mailto:EMAIL-HERE">Support</a>
+      <a href="#try">Pricing</a>
+      <a href="terms.html">Terms</a>
+      <a href="privacy.html">Privacy</a>
+    </div>
+    <p style="margin:0; font-size:13px;">
+      © <span id="yr">2026</span> Xtravalake. Hush is not affiliated with or
+      endorsed by Adobe. Adobe and Premiere Pro are trademarks of Adobe Inc.
+    </p>
+    <p style="margin:10px 0 0; font-size:13px;">
+      Hush bundles FFmpeg, used under the
+      <a href="https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html">LGPL v2.1</a>.
+      Source for the bundled build is available on request.
+    </p>
+  </div>
+</footer>
+
+<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+
+</body>
+</html>

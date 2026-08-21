@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy — Hush</title>
+<style>
+  :root { --bg:#17181a; --line:#2e3135; --ink:#e8e8e8; --ink-dim:#8d8d8d;
+          --ink-mid:#b4b4b4; --gold:#d8b23c; --gold-dk:#8a7a3c; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-size:16px; line-height:1.6;
+         font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,sans-serif;
+         -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:680px; margin:0 auto; padding:64px 24px 80px; }
+  a { color:var(--gold); }
+  h1 { font-size:32px; margin:0 0 8px; letter-spacing:-0.02em; }
+  h2 { font-size:19px; margin:36px 0 10px; }
+  p, li { color:var(--ink-mid); margin:0 0 14px; }
+  ul { padding-left:22px; }
+  strong { color:var(--ink); font-weight:600; }
+  .date { color:var(--ink-dim); font-size:14px; margin-bottom:36px; }
+  .back { display:inline-block; margin-bottom:32px; font-size:14px; }
+  .note { border-left:2px solid var(--gold-dk); padding-left:14px; font-size:14px;
+          color:var(--ink-dim); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← Hush</a>
+  <h1>Privacy</h1>
+  <p class="date">Last updated 21 August 2026</p>
+
+  <h2>Your audio never leaves your computer</h2>
+  <p>
+    Hush analyses audio entirely on your own machine. Nothing is uploaded, no
+    audio is sent anywhere, and there is no cloud processing step. This is not
+    a policy choice that could change quietly — it is how the software is
+    built. It works with no internet connection at all.
+  </p>
+
+  <h2>There is no analytics or telemetry</h2>
+  <p>
+    Hush does not track how you use it, does not report crashes automatically,
+    and contains no analytics of any kind. The only network request it ever
+    makes is to check your licence.
+  </p>
+
+  <h2>What the licence check sends</h2>
+  <p>When you activate or re-check a licence, Hush sends to the store:</p>
+  <ul>
+    <li>your licence key</li>
+    <li>
+      a <strong>machine identifier</strong>, which is a one-way SHA-256 hash of
+      your computer's hostname, your username and your operating system. It
+      cannot be reversed into any of those. Its only purpose is to let the store
+      count how many machines a licence is used on, and to let
+      <em>Remove from this Mac</em> free that slot again.
+    </li>
+  </ul>
+  <p>
+    That request goes to Lemon Squeezy, who process the payment and issue the
+    licence. Their privacy policy covers what they hold, and it is where your
+    name, email and payment details live — Hush never sees your payment
+    information, and neither does its developer.
+  </p>
+
+  <h2>What is stored on your computer</h2>
+  <p>
+    Your licence key and the date it was last verified are saved in a small
+    file in your user Library folder, so Hush does not have to ask the store
+    every time you open it. Removing the licence deletes it.
+  </p>
+
+  <h2>Email</h2>
+  <p>
+    If you email support, that email is kept only as long as needed to help
+    you. It is not added to a mailing list.
+  </p>
+
+  <h2>Contact</h2>
+  <p>
+    Questions about any of this: <a href="mailto:EMAIL-HERE">EMAIL-HERE</a>.
+  </p>
+
+  <p class="note">
+    This describes how Hush actually behaves, and each claim above is
+    verifiable in the software. It is written plainly rather than in legal
+    language, and it is not a substitute for advice from a solicitor if you
+    need a policy that satisfies a specific regulator.
+  </p>
+</div>
+</body>
+</html>
