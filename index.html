@@ -219,8 +219,27 @@ section p.lede { color: var(--muted); max-width: 40em; margin: 0 0 30px; }
 /* The cut animation: full-length clips, then the gate opens and closes.
    prefers-reduced-motion is honoured - a page that jitters is a page people
    leave, and some people get motion sick. */
+
+/*
+ * 🔴 The cut edges have to arrive WITH the cut.
+ *
+ * Every clip carries a dark 1px border, and it was drawn all the time - so
+ * during the "uncut" phase the bar was solid green with a dozen black lines
+ * ruled across it, which is exactly the thing the frame is meant to be showing
+ * has not happened yet. The borders now fade in at the moment the gate closes.
+ */
+.tl-clip { border-color: transparent; }
+.cutting .tl-clip {
+  animation: cutEdge 7s ease-in-out infinite;
+}
 .cutting .tl-clip.off {
-  animation: cut 7s ease-in-out infinite;
+  animation: cutEdge 7s ease-in-out infinite,
+             cut     7s ease-in-out infinite;
+}
+@keyframes cutEdge {
+  0%, 14%   { border-color: transparent; }
+  26%, 88%  { border-color: rgba(0,0,0,.5); }
+  100%      { border-color: transparent; }
 }
 @keyframes cut {
   /* uncut: every clip live, the state the user starts in */
@@ -231,6 +250,7 @@ section p.lede { color: var(--muted); max-width: 40em; margin: 0 0 30px; }
 
 @media (prefers-reduced-motion: reduce) {
   .cutting .tl-clip.off { animation: none; }
+  .cutting .tl-clip { animation: none; border-color: rgba(0,0,0,.5); }
 }
 
 /* ------------------------------------------------------------ spill demo */
@@ -491,6 +511,48 @@ h1 .grad {
   color: var(--muted); font-size: 14px; text-align: center; padding: 24px;
 }
 
+
+/* ------------------------------------------------------- scroll reveal */
+/*
+ * Sections lift in as they arrive, the way AutoPod's do.
+ *
+ * The hidden state is applied by JS (a class on the root element), never in
+ * the stylesheet. If the script fails, is blocked, or the browser is old, every
+ * section is simply visible - a reveal effect that can hide the whole page when
+ * it breaks is not worth having.
+ */
+.js-reveal section {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity .7s cubic-bezier(.22,.61,.36,1),
+              transform .7s cubic-bezier(.22,.61,.36,1);
+  will-change: opacity, transform;
+}
+.js-reveal section.seen { opacity: 1; transform: none; }
+
+/* The figure inside lags the heading slightly, so the block assembles rather
+   than sliding as one slab. */
+.js-reveal section .demo,
+.js-reveal section .price-card,
+.js-reveal section .stat-grid {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity .7s cubic-bezier(.22,.61,.36,1) .12s,
+              transform .7s cubic-bezier(.22,.61,.36,1) .12s;
+}
+.js-reveal section.seen .demo,
+.js-reveal section.seen .price-card,
+.js-reveal section.seen .stat-grid { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .js-reveal section,
+  .js-reveal section .demo,
+  .js-reveal section .price-card,
+  .js-reveal section .stat-grid {
+    opacity: 1; transform: none; transition: none;
+  }
+}
+
 /* ------------------------------------------------------------- pricing */
 .pay-toggle {
   display: flex; align-items: center; justify-content: center;
@@ -516,13 +578,27 @@ h1 .grad {
 }
 .switch[aria-checked="true"] i { transform: translateX(22px); }
 
+/*
+ * Lit from the inside as well as edged.
+ *
+ * The outline alone read as understated next to everything around it. Green
+ * from the top-left and pink from the bottom-right are the two colours the
+ * whole page is lit with, so the card picks up the room rather than
+ * introducing a third idea. Kept low-alpha: the price is the loudest thing in
+ * the card, and a background that competes with it is a background that wins.
+ */
 .price-card {
-  background: var(--panel);
+  background:
+    radial-gradient(115% 85% at 12% 0%,   rgba(163,230,53,.15), transparent 58%),
+    radial-gradient(105% 85% at 92% 104%, rgba(255,46,126,.16), transparent 60%),
+    var(--panel);
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 30px 28px;
   text-align: center;
   margin-bottom: 26px;
+  box-shadow: 0 0 60px rgba(163,230,53,.05),
+              0 0 90px rgba(255,46,126,.05);
 }
 .price-main {
   display: flex; align-items: baseline; justify-content: center;
@@ -1649,8 +1725,33 @@ function waveform(seed, segments, duration) {
     });
   }
 
+  /*
+   * 🔴 Measure again once the page has actually settled.
+   *
+   * drawLines() reads the strip's left edge, and that edge moves when the
+   * "ch 1" label reflows - which it does the moment a webfont or a stylesheet
+   * finishes loading. Locally everything is warm and cached so the first
+   * measurement is already right; over the network it is taken a beat too
+   * early and the lines stop short of the tracks. That is the whole difference
+   * between the preview and the published site.
+   */
+  function settle() {
+    drawLines();
+    if (!still) {
+      fan.classList.remove('lit');
+      void fan.offsetWidth;          // reflow, so the draw restarts cleanly
+      fan.classList.add('lit');
+    }
+  }
+
   drawLines();
   if (!still) fan.classList.add('lit');
+
+  requestAnimationFrame(settle);                       // after first layout
+  window.addEventListener('load', settle);             // after images/CSS
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(settle);                 // after webfonts
+  }
 
   // Re-measure on resize: the strips move, so the lines have to follow.
   var t;
@@ -1870,6 +1971,45 @@ function waveform(seed, segments, duration) {
     frame.innerHTML = '';
     frame.appendChild(f);
     frame.style.cursor = 'default';
+  });
+})();
+</script>
+
+<script>
+/* ---------------------------------------------------------------------------
+   Lift each section in as it arrives.
+--------------------------------------------------------------------------- */
+(function () {
+  var still = window.matchMedia &&
+              window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (still || !('IntersectionObserver' in window)) return;
+
+  var secs = document.querySelectorAll('section');
+  if (!secs.length) return;
+
+  // Only hide things once we know we can reveal them again.
+  document.documentElement.classList.add('js-reveal');
+
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      e.target.classList.add('seen');
+      io.unobserve(e.target);
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+
+  [].forEach.call(secs, function (s) { io.observe(s); });
+
+  /*
+   * Anything already on screen at load must not wait for a scroll that may
+   * never come - someone landing on #try goes straight there and would find
+   * a blank section.
+   */
+  requestAnimationFrame(function () {
+    [].forEach.call(secs, function (s) {
+      var r = s.getBoundingClientRect();
+      if (r.top < window.innerHeight && r.bottom > 0) s.classList.add('seen');
+    });
   });
 })();
 </script>
