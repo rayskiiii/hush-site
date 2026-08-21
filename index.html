@@ -3,571 +3,1109 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hush — automatic multi-mic audio cleanup for Premiere Pro</title>
-<meta name="description" content="Hush mutes each microphone when its owner isn't speaking, across a whole podcast or interview, in seconds. A Premiere Pro extension for macOS.">
+<title>Hush — multi-mic audio, cut in a minute · Premiere Pro</title>
 
-<meta property="og:title" content="Hush — automatic multi-mic audio cleanup for Premiere Pro">
-<meta property="og:description" content="Mutes each microphone when its owner isn't speaking, across a whole episode, in seconds.">
-<meta property="og:type" content="website">
-
-<!--
-  ═══════════════════════════════════════════════════════════════════════
-  EDIT THESE THREE THINGS AND THE PAGE IS YOURS
-  ═══════════════════════════════════════════════════════════════════════
-
-  1. PRICE ..... search for "PRICE-HERE". $19/mo is a placeholder, not a
-                 recommendation. AutoPod sits around $30/mo and does more
-                 things; Hush does one thing well. Pick your own number.
-  2. BUY LINK .. search for "BUY-LINK-HERE". Paste the Lemon Squeezy
-                 checkout URL. The same URL goes in js/licence.js.
-  3. EMAIL ..... search for "EMAIL-HERE". A real inbox you read.
-
-  Everything is in this one file. No build step, no dependencies.
-  ═══════════════════════════════════════════════════════════════════════
--->
+<meta name="description" content="Cuts multi-mic audio automatically — podcasts, interviews, panels, roundtables. Works out who is speaking from mic distance, not just loudness, mutes everyone else and fades every edit.">
+<meta property="og:title" content="Hush — multi-mic audio, cut in a minute">
+<meta property="og:description" content="Cuts multi-mic audio automatically. Two hours across five microphones in a minute.">
+<meta property="og:type" content="product">
 
 <style>
-  :root {
-    --bg:      #17181a;
-    --panel:   #1f2124;
-    --line:    #2e3135;
-    --ink:     #e8e8e8;
-    --ink-dim: #8d8d8d;
-    --ink-mid: #b4b4b4;
-    --gold:    #d8b23c;
-    --gold-dk: #8a7a3c;
-    --green:   #6ec06e;
-    --red:     #d05050;
-    --blue:    #3a97f0;
-  }
+/* ---------------------------------------------------------------------------
+   One file, no build step, no dependencies.
+   A landing page that needs npm to change a price is a page that stops being
+   updated. Everything here is editable with a text editor.
 
-  * { box-sizing: border-box; }
+   The palette is the panel's, deliberately: someone arriving from a video of
+   Hush running should recognise the thing they are buying.
+--------------------------------------------------------------------------- */
+:root {
+  --bg:      #141414;
+  --panel:   #1d1d1d;
+  --line:    #2e2e2e;
+  --ink:     #ebebeb;
+  --muted:   #9a9a9a;
+  --live:    #7cb342;   /* the green of an enabled clip */
+  --muteclip:#2f4420;   /* a muted one */
+  --accent:  #4a9eff;
+  --radius:  10px;
+}
 
-  html { scroll-behavior: smooth; }
+* { box-sizing: border-box; }
 
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, sans-serif;
-    font-size: 16px;
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-  }
+html { scroll-behavior: smooth; }
 
-  .wrap { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
 
-  a { color: var(--gold); }
-  a:hover { color: #e6c04a; }
+.wrap { max-width: 860px; margin: 0 auto; padding: 0 24px; }
 
-  h1, h2, h3 { line-height: 1.25; font-weight: 600; }
+a { color: inherit; }
 
-  /* ---------------------------------------------------------------- hero */
+/* ------------------------------------------------------------------- nav */
+nav {
+  border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(20,20,20,.9);
+  backdrop-filter: blur(8px);
+}
+nav .wrap { display: flex; align-items: center; gap: 28px; height: 62px; }
+.brand { display: flex; align-items: center; gap: 9px; font-weight: 650; letter-spacing: -.01em; }
+.brand svg { display: block; }
+nav a.link { color: var(--muted); text-decoration: none; font-size: 14.5px; }
+nav a.link:hover { color: var(--ink); }
+nav .spacer { margin-left: auto; }
 
-  header {
-    padding: 72px 0 56px;
-    border-bottom: 1px solid var(--line);
-  }
+/* ------------------------------------------------------------------ hero */
+header.hero { padding: 72px 0 44px; }
+.badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12.5px; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 100px;
+  padding: 5px 12px; margin-bottom: 22px;
+}
+.badge b { color: var(--ink); font-weight: 600; }
 
-  .mark {
-    font-size: 13px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--gold-dk);
-    margin-bottom: 20px;
-  }
+h1 {
+  font-size: clamp(38px, 7vw, 58px);
+  line-height: 1.04; letter-spacing: -.03em;
+  margin: 0 0 18px;
+}
+.tagline { font-size: 19px; color: var(--muted); max-width: 33em; margin: 0 0 26px; }
+.compat { font-size: 14px; color: var(--muted); margin: 0 0 30px; }
 
-  h1 {
-    font-size: 42px;
-    margin: 0 0 18px;
-    letter-spacing: -0.02em;
-  }
+.buy { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.btn {
+  display: inline-block; text-decoration: none;
+  background: var(--ink); color: #111;
+  font-weight: 640; font-size: 15.5px;
+  padding: 13px 26px; border-radius: var(--radius);
+  border: 1px solid var(--ink);
+  transition: transform .12s ease, opacity .12s ease;
+}
+.btn:hover { transform: translateY(-1px); opacity: .92; }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn.ghost:hover { border-color: var(--muted); }
+.price { font-size: 15.5px; color: var(--muted); }
 
-  .lede {
-    font-size: 20px;
-    color: var(--ink-mid);
-    margin: 0 0 32px;
-    max-width: 620px;
-  }
+/* --------------------------------------------------------------- sections */
+section { padding: 54px 0; border-top: 1px solid var(--line); }
+h2 { font-size: 25px; letter-spacing: -.02em; margin: 0 0 12px; }
+section p.lede { color: var(--muted); max-width: 40em; margin: 0 0 30px; }
 
-  .cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.demo {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+  overflow: hidden;
+}
+.demo figcaption {
+  font-size: 13px; color: var(--muted); margin-top: 14px;
+  padding-top: 12px; border-top: 1px solid var(--line);
+}
 
-  .btn {
-    display: inline-block;
-    padding: 13px 26px;
-    border-radius: 6px;
-    font-size: 15px;
-    font-weight: 600;
-    text-decoration: none;
-    border: 1px solid transparent;
-  }
+/* ------------------------------------------------------- timeline graphic */
+.tl { display: grid; gap: 9px; }
+.tl-row { display: flex; align-items: center; gap: 12px; }
+.tl-name {
+  width: 34px; flex: none; font-size: 12px; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.tl-track {
+  flex: 1; height: 30px; border-radius: 4px;
+  background: #22301a;
+  position: relative; overflow: hidden;
+}
 
-  .btn-primary { background: var(--gold); color: #1a1a1a; }
-  .btn-primary:hover { background: #e6c04a; color: #1a1a1a; }
+/*
+ * A waveform behind everything, dimmed or lit by the clip on top.
+ *
+ * Drawing muted regions as empty space made a busy track read as solid green
+ * and a sparse one as dark blocks - the same information in two visual
+ * languages, which is what made the pair confusing. Now every region is a
+ * clip over the same waveform, and the only difference between live and muted
+ * is brightness. Which is exactly the difference in Premiere.
+ */
+.tl-track > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.tl-track > svg path { fill: #9ccc65; opacity: .55; }
 
-  .btn-ghost { border-color: var(--line); color: var(--ink); }
-  .btn-ghost:hover { border-color: var(--ink-dim); color: var(--ink); }
+.tl-clip {
+  position: absolute; top: 0; bottom: 0;
+  border-left: 1px solid rgba(0,0,0,.5);
+  border-right: 1px solid rgba(0,0,0,.5);
+  background: rgba(124,179,66,.62);
+}
+.tl-clip.off { background: rgba(18,26,12,.72); }
 
-  .cta-note { font-size: 14px; color: var(--ink-dim); margin-top: 14px; }
+/* Taller on a desktop, where there is room for it to be read. */
+@media (min-width: 900px) {
+  .tl-track { height: 46px; }
+  .tl { gap: 11px; }
+}
 
-  /* ------------------------------------------------------------ sections */
+/* The cut animation: full-length clips, then the gate opens and closes.
+   prefers-reduced-motion is honoured - a page that jitters is a page people
+   leave, and some people get motion sick. */
+.cutting .tl-clip.off {
+  animation: cut 7s ease-in-out infinite;
+}
+@keyframes cut {
+  /* uncut: every clip live, the state the user starts in */
+  0%, 14%   { background: rgba(124,179,66,.62); }
+  26%, 88%  { background: rgba(18,26,12,.72); }
+  100%      { background: rgba(124,179,66,.62); }
+}
 
-  section { padding: 56px 0; border-bottom: 1px solid var(--line); }
+@media (prefers-reduced-motion: reduce) {
+  .cutting .tl-clip.off { animation: none; }
+}
 
-  h2 { font-size: 26px; margin: 0 0 18px; }
-  h3 { font-size: 17px; margin: 28px 0 8px; }
+/* ------------------------------------------------------------ spill demo */
+.bars { display: grid; gap: 9px; }
+.bar-row { display: flex; align-items: center; gap: 12px; font-size: 12.5px; }
+.bar-label { width: 92px; flex: none; color: var(--muted); }
+.bar-outer { flex: 1; height: 9px; background: #262626; border-radius: 100px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 100px; background: var(--live); }
+.bar-fill.spill { background: #6b4a2a; }
+.bar-num { width: 74px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
 
-  p { margin: 0 0 16px; color: var(--ink-mid); }
-  p.tight { margin-bottom: 8px; }
+/* ---------------------------------------------------------------- speed */
+.stat-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1px; background: var(--line);
+  border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+}
+.stat { background: var(--panel); padding: 20px 18px; }
+.stat b { display: block; font-size: 27px; letter-spacing: -.02em; margin-bottom: 3px; }
+.stat span { font-size: 13px; color: var(--muted); }
 
-  strong { color: var(--ink); font-weight: 600; }
 
-  ul { margin: 0 0 16px; padding-left: 22px; color: var(--ink-mid); }
-  li { margin-bottom: 8px; }
 
-  /* --------------------------------------------------------------- stats */
+/* ------------------------------------------------------ arrival diagram */
+.dist { width: 100%; height: auto; display: block; }
+.dist .wave   { fill: none; stroke: #7cb342; stroke-width: 1.1; opacity: .38; }
+.dist .lead   { stroke: #4a9eff; stroke-width: 1.3; stroke-dasharray: 4 4; fill: none; }
+.dist .mic    { fill: #262626; stroke: var(--line); stroke-width: 1.2; }
+.dist .micOn  { fill: #2c3d1c; stroke: #7cb342; stroke-width: 1.4; }
+.dist .lbl    { fill: var(--muted); font: 12px -apple-system, "Segoe UI", sans-serif; }
+.dist .lblHi  { fill: var(--ink); font: 600 12.5px -apple-system, "Segoe UI", sans-serif; }
+.dist .src    { fill: #7cb342; }
+.dist .rule   { stroke: #3d3d3d; stroke-width: 1; stroke-dasharray: 3 3; }
+.dist .pulse  { fill: #7cb342; }
+.dist .pulseB { fill: #4a9eff; }
 
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 14px;
-    margin: 28px 0 8px;
-  }
+/* ------------------------------------------------------ before / after */
+.cmp { display: grid; gap: 15px; }
+.cmp-row { display: grid; grid-template-columns: 128px 1fr; gap: 12px; align-items: center; }
+.cmp-lbl { font-size: 12.5px; color: var(--muted); }
+.cmp-pair { display: grid; gap: 5px; }
+.cmp-bar { display: flex; align-items: center; gap: 9px; font-size: 11.5px; }
+.cmp-outer { flex: 1; height: 13px; background: #262626; border-radius: 3px; overflow: hidden; }
+.cmp-fill { height: 100%; border-radius: 3px; }
+.cmp-fill.was { background: #4a4a4a; }
+.cmp-fill.now { background: var(--live); }
+.cmp-fill.bad { background: #6b4a2a; }
+.cmp-tag { width: 42px; flex: none; color: #7a7a7a; }
+.cmp-num { width: 56px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+.cmp-row + .cmp-row { border-top: 1px solid var(--line); padding-top: 15px; }
+@media (max-width: 560px) { .cmp-row { grid-template-columns: 1fr; gap: 7px; } }
 
-  .stat {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 20px;
-  }
+/* ------------------------------------------------------- settings playground */
+.play { display: grid; grid-template-columns: 210px 1fr; gap: 22px; }
+@media (max-width: 680px) { .play { grid-template-columns: 1fr; } }
 
-  .stat-num {
-    font-size: 26px;
-    font-weight: 600;
-    color: var(--ink);
-    letter-spacing: -0.02em;
-  }
+.knobs { display: grid; gap: 16px; align-content: start; }
+.knob label {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 12.5px; color: var(--muted); margin-bottom: 6px;
+}
+.knob label b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.knob input[type=range] {
+  width: 100%; -webkit-appearance: none; appearance: none;
+  height: 3px; border-radius: 3px; background: #3a3a3a; outline: none;
+}
+.knob input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--ink); cursor: pointer; border: none;
+}
+.knob input[type=range]::-moz-range-thumb {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--ink); cursor: pointer; border: none;
+}
+.seg { display: flex; gap: 0; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+.seg button {
+  flex: 1; background: transparent; border: 0; color: var(--muted);
+  font: inherit; font-size: 12.5px; padding: 7px 4px; cursor: pointer;
+}
+.seg button[aria-pressed="true"] { background: var(--live); color: #16240b; font-weight: 600; }
 
-  .stat-num .from {
-    color: var(--ink-dim);
-    font-size: 17px;
-    font-weight: 400;
-  }
+.readout {
+  display: flex; gap: 18px; font-size: 12.5px; color: var(--muted);
+  margin-top: 14px; font-variant-numeric: tabular-nums;
+}
+.readout b { color: var(--ink); font-weight: 600; }
 
-  .stat-label {
-    font-size: 13px;
-    color: var(--ink-dim);
-    margin-top: 6px;
-    line-height: 1.45;
-  }
+/* --------------------------------------------------------------- fan-out */
+.fan { position: relative; height: 210px; }
+.fan .file {
+  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 148px; padding: 12px 13px;
+  background: #262626; border: 1px solid var(--line); border-radius: 8px;
+}
+.fan .file b { display: block; font-size: 13px; margin-bottom: 3px; }
+.fan .file span { font-size: 11.5px; color: var(--muted); }
+.fan .outs { position: absolute; right: 0; top: 0; bottom: 0; width: calc(100% - 200px); }
+.fan .out {
+  position: absolute; right: 0; height: 26px; width: 100%;
+  display: flex; align-items: center; gap: 9px;
+}
+.fan .out .ch {
+  font-size: 11px; color: var(--muted); width: 30px; flex: none;
+  font-variant-numeric: tabular-nums;
+}
+.fan .out .strip { flex: 1; height: 20px; border-radius: 3px; background: var(--muteclip); position: relative; overflow: hidden; }
+.fan .out .strip i { position: absolute; top: 0; bottom: 0; background: var(--live); font-style: normal; }
+.fan svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.fan svg path { fill: none; stroke: #3d3d3d; stroke-width: 1.2; }
 
-  .measured {
-    font-size: 13px;
-    color: var(--ink-dim);
-    border-left: 2px solid var(--gold-dk);
-    padding-left: 14px;
-    margin-top: 22px;
-  }
+/* ------------------------------------------------------------------ misc */
+ul.plain { list-style: none; padding: 0; margin: 0; display: grid; gap: 13px; }
+ul.plain li { display: flex; gap: 11px; align-items: flex-start; color: var(--muted); }
+ul.plain b { color: var(--ink); font-weight: 600; }
+.tick { color: var(--live); flex: none; margin-top: 1px; }
 
-  /* --------------------------------------------------------------- steps */
+details {
+  border-top: 1px solid var(--line); padding: 16px 0;
+}
+details summary {
+  cursor: pointer; font-weight: 550; list-style: none;
+  display: flex; justify-content: space-between; align-items: center;
+}
+details summary::-webkit-details-marker { display: none; }
+details summary::after { content: '+'; color: var(--muted); font-size: 20px; }
+details[open] summary::after { content: '\2212'; }
+details p { color: var(--muted); margin: 12px 0 0; max-width: 44em; }
 
-  ol.steps { counter-reset: s; list-style: none; padding: 0; margin: 24px 0 0; }
-
-  ol.steps li {
-    counter-increment: s;
-    position: relative;
-    padding-left: 44px;
-    margin-bottom: 22px;
-    color: var(--ink-mid);
-  }
-
-  ol.steps li::before {
-    content: counter(s);
-    position: absolute;
-    left: 0; top: 0;
-    width: 28px; height: 28px;
-    border-radius: 50%;
-    background: var(--panel);
-    border: 1px solid var(--line);
-    color: var(--gold);
-    font-size: 13px;
-    font-weight: 600;
-    display: flex; align-items: center; justify-content: center;
-  }
-
-  ol.steps b { color: var(--ink); display: block; margin-bottom: 3px; font-weight: 600; }
-
-  /* ------------------------------------------------------------- pricing */
-
-  .price-card {
-    background: var(--panel);
-    border: 1px solid var(--gold-dk);
-    border-radius: 10px;
-    padding: 32px;
-    text-align: center;
-  }
-
-  .price {
-    font-size: 46px;
-    font-weight: 600;
-    color: var(--ink);
-    letter-spacing: -0.02em;
-  }
-
-  .price span { font-size: 17px; color: var(--ink-dim); font-weight: 400; }
-
-  .price-sub { color: var(--ink-dim); font-size: 14px; margin: 6px 0 24px; }
-
-  .includes {
-    list-style: none;
-    padding: 0;
-    margin: 26px 0 0;
-    text-align: left;
-    display: inline-block;
-  }
-
-  .includes li { padding-left: 24px; position: relative; }
-  .includes li::before {
-    content: "✓";
-    position: absolute; left: 0;
-    color: var(--green);
-  }
-
-  /* ----------------------------------------------------------------- faq */
-
-  details {
-    border-bottom: 1px solid var(--line);
-    padding: 16px 0;
-  }
-  details:first-of-type { border-top: 1px solid var(--line); }
-
-  summary {
-    cursor: pointer;
-    font-weight: 600;
-    color: var(--ink);
-    font-size: 16px;
-    list-style: none;
-    padding-right: 26px;
-    position: relative;
-  }
-  summary::-webkit-details-marker { display: none; }
-  summary::after {
-    content: "+";
-    position: absolute; right: 4px; top: -2px;
-    color: var(--gold-dk);
-    font-size: 20px;
-    font-weight: 400;
-  }
-  details[open] summary::after { content: "–"; }
-  details > *:not(summary) { margin-top: 14px; }
-  details p:last-child { margin-bottom: 0; }
-
-  /* -------------------------------------------------------------- footer */
-
-  footer {
-    padding: 40px 0 64px;
-    color: var(--ink-dim);
-    font-size: 14px;
-  }
-  footer a { color: var(--ink-mid); }
-  .foot-row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 18px; }
-
-  @media (max-width: 600px) {
-    h1 { font-size: 32px; }
-    .lede { font-size: 18px; }
-    header { padding: 48px 0 40px; }
-    section { padding: 42px 0; }
-  }
+footer {
+  border-top: 1px solid var(--line);
+  padding: 34px 0 60px; color: var(--muted); font-size: 13.5px;
+}
+footer .wrap { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
+footer a { color: var(--muted); }
+footer .spacer { margin-left: auto; }
 </style>
 </head>
 <body>
 
-<header>
+<nav>
   <div class="wrap">
-    <div class="mark">For Adobe Premiere Pro · macOS</div>
-    <h1>Every mic open is every mic bleeding.</h1>
-    <p class="lede">
-      Hush listens to a multi-microphone recording, works out who is actually
-      speaking at each moment, and mutes everyone else — across a whole episode,
-      in seconds.
+    <span class="brand">
+      <svg width="30" height="14" viewBox="0 0 44 20" aria-hidden="true">
+        <path d="M2 10 L5 10 L7 4 L9 16 L11 7 L13 13 L15 10 L18 10"
+              fill="none" stroke="#7cb342" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M26 10 L29 10 L31 5 L33 15 L35 8 L37 12 L39 10 L42 10"
+              fill="none" stroke="#7cb342" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Hush
+    </span>
+    <span class="spacer"></span>
+    <a class="link" href="#how">How it works</a>
+    <a class="link" href="#try">Pricing</a>
+    <a class="link" href="#faq">FAQ</a>
+    <a class="link" href="mailto:EMAIL-HERE">Contact</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="badge"><b>Pr</b> Premiere Pro</span>
+
+    <h1>Hours of multi-mic audio,<br>cut in a minute.</h1>
+
+    <p class="tagline">
+      Podcasts, interviews, panels, roundtables &mdash; anything where several
+      microphones are running at once. Hush works out who is actually speaking,
+      from how far each voice travelled rather than how loud it is, then mutes
+      every other microphone and fades each edit.
     </p>
-    <div class="cta-row">
-      <a class="btn btn-primary" href="BUY-LINK-HERE">Get Hush</a>
-      <a class="btn btn-ghost" href="#try">Try it free first</a>
+
+    <p class="compat">Premiere Pro 2022 or later · macOS · cancel any time</p>
+
+    <div class="buy">
+      <!-- Replace with your store's checkout link. Lemon Squeezy and Paddle
+           both give you a URL; nothing else on this page needs to change. -->
+      <a class="btn" href="BUY-LINK-HERE" id="buyBtn">Get Hush</a>
+      <a class="btn ghost" href="#try">Try it free</a>
+      <span class="price">The free version runs on the first 5 minutes of any sequence.</span>
     </div>
-    <p class="cta-note">
-      The free version runs on the first 5 minutes of any sequence. Same
-      detection, same cuts, same quality — just shorter.
-    </p>
   </div>
 </header>
 
-<section>
+<section id="how">
   <div class="wrap">
-    <h2>The problem</h2>
-    <p>
-      Four people around a table with four microphones means each mic picks up
-      all four voices. The room hum, the chair creak and the sniff during
-      someone else's answer are all recorded four times over, and they stack.
+    <h2>One mic open at a time.</h2>
+    <p class="lede">
+      Five people around a table means five microphones hearing five people.
+      Hush reads every track, decides who has the floor moment by moment,
+      and disables the rest — so you keep one clean voice instead of five
+      copies of the same room.
     </p>
-    <p>
-      The fix has always been manual: scrub the timeline, find who is speaking,
-      cut around them, mute the rest. On a two-hour episode that is an
-      afternoon of work that requires attention but no thought.
-    </p>
+
+    <figure class="demo" style="margin:0">
+      <div class="tl cutting" id="tlDemo"></div>
+      <figcaption>
+        Real segment data from a 112-minute episode. Green is live, dark is muted.
+        Every edit gets a crossfade shaped from your attack and release settings.
+      </figcaption>
+    </figure>
   </div>
 </section>
 
 <section>
   <div class="wrap">
-    <h2>What it does to a real session</h2>
-    <p>
-      Measured on a five-microphone recording against hand-labelled ground
-      truth — a human marking who was actually speaking, second by second.
+    <h2>It knows spill from speech.</h2>
+    <p class="lede">
+      When mics are close together, one person's voice arrives on everybody
+      else's track only a few decibels down — too close for a level comparison
+      to help. Hush also compares the <em>shape</em> of the signals: a mic
+      that is only hearing someone else rises and falls with them exactly, and
+      a second person genuinely talking does not.
     </p>
 
-    <div class="stats">
-      <div class="stat">
-        <div class="stat-num"><span class="from">19% →</span> 64%</div>
-        <div class="stat-label">of the episode has exactly one mic open, instead of several</div>
+    <figure class="demo" style="margin:0">
+      <div class="bars">
+        <div class="bar-row">
+          <span class="bar-label">A2 speaking</span>
+          <span class="bar-outer"><span class="bar-fill" style="width:78%"></span></span>
+          <span class="bar-num">−17.1 dB</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">A1 hearing A2</span>
+          <span class="bar-outer"><span class="bar-fill spill" style="width:55%"></span></span>
+          <span class="bar-num">−27.0 dB</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">A1 speaking</span>
+          <span class="bar-outer"><span class="bar-fill" style="width:62%"></span></span>
+          <span class="bar-num">−21.2 dB</span>
+        </div>
       </div>
-      <div class="stat">
-        <div class="stat-num"><span class="from">57.8% →</span> 15.1%</div>
-        <div class="stat-label">leakage — a mic left open over somebody else's voice</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num">Seconds</div>
-        <div class="stat-label">to apply thousands of cuts and fades, not an afternoon</div>
-      </div>
+      <figcaption>
+        Measured on a real session: only 9.9 dB between a voice and its spill.
+        On that episode, shape-based rejection removed 32 minutes of echo that
+        level alone had let through.
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Fast enough to use on every episode.</h2>
+    <p class="lede">
+      Hush rebuilds the sequence as a file and re-imports it, rather than
+      making thousands of edits one at a time. The difference is not marginal:
+      a full episode is done while you are still reading the log.
+    </p>
+
+    <div class="stat-grid">
+      <div class="stat"><b>70 s</b><span>two hours across five microphones</span></div>
+      <div class="stat"><b>8,900</b><span>cuts, each with a fade</span></div>
+      <div class="stat"><b>0</b><span>changes to your original sequence</span></div>
     </div>
-
-    <p class="measured">
-      Those are numbers from one real session, not a promise about yours.
-      Recordings differ enormously — which is exactly why the free version runs
-      on your own audio before you pay anything.
-    </p>
   </div>
 </section>
 
 <section>
   <div class="wrap">
-    <h2>How you use it</h2>
-    <ol class="steps">
-      <li>
-        <b>Open the panel</b>
-        Window → Extensions → Hush, on the sequence you are already editing.
-      </li>
-      <li>
-        <b>Tick which tracks are microphones</b>
-        Hush reads the sequence and lists them. Name them if you like.
-      </li>
-      <li>
-        <b>Say what kind of recording it is</b>
-        Mics close together? People moving around? Three checkboxes, in plain
-        English, no decibel numbers to guess at.
-      </li>
-      <li>
-        <b>Run it</b>
-        You get a new sequence with the cuts applied, and a plain-English
-        report of what happened on each mic. Your original is untouched.
-      </li>
-    </ol>
+    <h2>Built for real recordings.</h2>
+    <ul class="plain">
+      <li><span class="tick">✓</span><span><b>Multichannel field recorders.</b>
+        Five mics in one file, each on its own channel — Hush finds which
+        channel belongs to which track and decodes them separately.</span></li>
+      <li><span class="tick">✓</span><span><b>Recordings that roll over.</b>
+        When the recorder starts a second file mid-session, every cut still
+        reads from the right one.</span></li>
+      <li><span class="tick">✓</span><span><b>Nested and linked tracks.</b>
+        Handled, including groups of linked channels.</span></li>
+      <li><span class="tick">✓</span><span><b>Your clip gain is kept.</b>
+        If you balanced the mics before running it, that balance survives.</span></li>
+      <li><span class="tick">✓</span><span><b>Nothing is deleted.</b>
+        Cuts are muted, not removed, on a duplicate of your sequence. One
+        button re-enables everything.</span></li>
+    </ul>
+  </div>
+</section>
+
+
+
+
+<section id="results">
+  <div class="wrap">
+    <h2>What it did to a real session.</h2>
+    <p class="lede">
+      Measured against hand&#8209;labelled ground truth &mdash; a person marking
+      who was actually speaking, second by second &mdash; on a five&#8209;microphone
+      recording. Not a demo reel: the same numbers were used to decide whether
+      each change to the detection was worth keeping.
+    </p>
+
+    <figure class="demo" style="margin:0">
+      <div class="cmp">
+        <div class="cmp-row">
+          <span class="cmp-lbl">Clean isolation<br><span style="font-size:11.5px">one mic open, not several</span></span>
+          <span class="cmp-pair">
+            <span class="cmp-bar"><span class="cmp-tag">before</span>
+              <span class="cmp-outer"><span class="cmp-fill was" style="width:19%"></span></span>
+              <span class="cmp-num">19%</span></span>
+            <span class="cmp-bar"><span class="cmp-tag">after</span>
+              <span class="cmp-outer"><span class="cmp-fill now" style="width:64%"></span></span>
+              <span class="cmp-num">64%</span></span>
+          </span>
+        </div>
+
+        <div class="cmp-row">
+          <span class="cmp-lbl">Leakage<br><span style="font-size:11.5px">a mic open over someone else</span></span>
+          <span class="cmp-pair">
+            <span class="cmp-bar"><span class="cmp-tag">before</span>
+              <span class="cmp-outer"><span class="cmp-fill bad" style="width:57.8%"></span></span>
+              <span class="cmp-num">57.8%</span></span>
+            <span class="cmp-bar"><span class="cmp-tag">after</span>
+              <span class="cmp-outer"><span class="cmp-fill now" style="width:15.1%"></span></span>
+              <span class="cmp-num">15.1%</span></span>
+          </span>
+        </div>
+      </div>
+      <figcaption>
+        Two failure modes, never averaged into one score: <b>words lost</b> and
+        <b>leakage let through</b>. Averaging them hides the one that ruins an
+        edit. Hush is deliberately tuned to leave a mic open rather than risk
+        clipping the start of a word &mdash; on this session that cost 10% of words
+        being caught slightly late, and you can push it either way per microphone.
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="distance">
+  <div class="wrap">
+    <h2>It listens for who is nearest.</h2>
+    <p class="lede">
+      Loudness alone cannot separate two people sitting close together &mdash; a
+      quiet talker on a hot mic reads louder than a loud one further away. So
+      Hush also measures <em>when</em> the sound arrived. Sound covers about a
+      metre every three milliseconds, so the microphone nearest the speaker
+      hears them fractionally first, and that ordering does not care how loud
+      anyone is.
+    </p>
+
+    <figure class="demo" style="margin:0">
+      <svg class="dist" viewBox="0 0 700 232" role="img"
+           aria-label="A voice reaching the near microphone before the far one">
+        <!-- wavefronts -->
+        <circle class="wave" cx="120" cy="96" r="46"/>
+        <circle class="wave" cx="120" cy="96" r="82"/>
+        <circle class="wave" cx="120" cy="96" r="118"/>
+        <circle class="wave" cx="120" cy="96" r="154"/>
+        <circle class="wave" cx="120" cy="96" r="190"/>
+
+        <!-- the speaker -->
+        <circle class="src" cx="120" cy="96" r="8"/>
+        <text class="lblHi" x="120" y="130" text-anchor="middle">speaking</text>
+
+        <!-- near mic -->
+        <rect class="micOn" x="292" y="72" width="52" height="48" rx="7"/>
+        <text class="lblHi" x="318" y="102" text-anchor="middle">A2</text>
+        <text class="lbl"   x="318" y="140" text-anchor="middle">0.9 m</text>
+
+        <!-- far mic -->
+        <rect class="mic" x="596" y="72" width="52" height="48" rx="7"/>
+        <text class="lbl" x="622" y="102" text-anchor="middle">A1</text>
+        <text class="lbl" x="622" y="140" text-anchor="middle">1.8 m</text>
+
+        <!-- distance rules -->
+        <line class="rule" x1="120" y1="96" x2="292" y2="96"/>
+        <line class="lead" x1="344" y1="96" x2="596" y2="96"/>
+
+        <!-- arrival strip -->
+        <line class="rule" x1="40" y1="176" x2="660" y2="176"/>
+        <text class="lbl" x="40" y="166">arrival</text>
+
+        <rect class="pulse"  x="292" y="182" width="3" height="26" rx="1.5"/>
+        <text class="lblHi"  x="298" y="224">A2 first</text>
+
+        <rect class="pulseB" x="392" y="182" width="3" height="26" rx="1.5"/>
+        <text class="lbl"    x="398" y="224">A1, 2.6 ms later</text>
+      </svg>
+      <figcaption>
+        2.6 milliseconds is roughly 125 samples at 48 kHz &mdash; small, but far
+        larger than the measurement error, and it does not move when someone
+        leans back or raises their voice. Hush measures it continuously, so
+        microphones that get picked up and moved mid&#8209;session are followed
+        rather than assumed.
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="settings">
+  <div class="wrap">
+    <h2>Every rule is a slider.</h2>
+    <p class="lede">
+      No two rooms sound alike, so nothing here is fixed. Move a control and
+      the whole edit changes shape. Try it &mdash; this is the real arithmetic,
+      running on a sample of one of my own episodes.
+    </p>
+
+    <figure class="demo" style="margin:0">
+      <div class="play">
+        <div class="knobs">
+          <div class="knob">
+            <label for="pBridge">Bridge gaps <b id="vBridge">400 ms</b></label>
+            <input type="range" id="pBridge" min="0" max="1400" step="50" value="400">
+          </div>
+          <div class="knob">
+            <label for="pFade">Fade length <b id="vFade">100 ms</b></label>
+            <input type="range" id="pFade" min="0" max="400" step="10" value="100">
+          </div>
+          <div class="knob">
+            <label for="pRelease">Release <b id="vRelease">300 ms</b></label>
+            <input type="range" id="pRelease" min="20" max="900" step="20" value="300">
+          </div>
+          <div class="knob">
+            <label>Echo reject</label>
+            <div class="seg" id="pEcho">
+              <button type="button" data-v="0">Off</button>
+              <button type="button" data-v="1" aria-pressed="true">On</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="tl" id="playTl"></div>
+          <div class="readout">
+            <span><b id="rClips">0</b> clips</span>
+            <span><b id="rFades">0</b> fades</span>
+            <span><b id="rShape">13 / 188 ms</b> fade in / out</span>
+          </div>
+        </div>
+      </div>
+      <figcaption>
+        One minute of a two&#8209;host conversation. The waveform is what each mic
+        actually picked up, spill included &mdash; only the lit clips survive.
+        Bridge gaps merges pauses shorter than the value, so a breath
+        mid&#8209;sentence stops becoming two clips. Fade length is the average;
+        release decides how much of it lands on the tail, because speech starts
+        fast and ends slowly.
+      </figcaption>
+    </figure>
   </div>
 </section>
 
 <section>
   <div class="wrap">
-    <h2>Built on measurement, not vibes</h2>
-    <p>
-      Hush decides using loudness, how much each pair of microphones agrees
-      with the other, and — where the recording allows it — <strong>which mic the
-      sound reached first</strong>. Sound takes about 3 milliseconds to travel a
-      metre, so the mic nearest the speaker hears them fractionally sooner. That
-      is often the only thing that separates two people sitting close together
-      when one has a much louder voice.
+    <h2>One file. Five microphones.</h2>
+    <p class="lede">
+      Field recorders write every mic into a single multichannel file, and
+      Premiere lays them out as tracks that all point at the same media.
+      Hush works out which channel belongs to which track and decodes them
+      separately &mdash; otherwise every track is the same mixdown, and no
+      amount of tuning can tell five identical signals apart.
     </p>
-    <p>
-      It also handles the awkward realities: microphones that move mid-session,
-      recorders whose clocks drift apart, and files that roll over at 4 GB
-      partway through a long recording.
+
+    <figure class="demo" style="margin:0">
+      <div class="fan" id="fanDemo">
+        <div class="file">
+          <b>REC&#8209;0042.WAV</b>
+          <span>10 channels &middot; 48 kHz</span>
+        </div>
+        <svg viewBox="0 0 100 210" preserveAspectRatio="none" aria-hidden="true"></svg>
+        <div class="outs"></div>
+      </div>
+      <figcaption>
+        It also follows a recorder that rolls over to a second file mid&#8209;session,
+        so a cut after the changeover still reads from the right one.
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Not a silence remover.</h2>
+    <p class="lede">
+      Tools in this space usually remove the quiet bits from one track, or
+      switch camera angles based on who is loudest. Hush does something else:
+      it decides, moment by moment, which <em>microphone</em> should be open,
+      and disables the rest.
     </p>
-    <p>
-      Every change to the detection has been scored against hand-labelled
-      recordings, tracking two failure modes separately — <strong>words lost</strong>
-      and <strong>leakage let through</strong>. They are never averaged into one
-      number, because a tool that hides one behind the other is the thing that
-      ruins an edit.
-    </p>
+    <ul class="plain">
+      <li><span class="tick">&#10003;</span><span><b>It edits the audio, not the picture.</b>
+        Every mic is enabled and disabled on its own timing, so five open
+        microphones become one clean voice.</span></li>
+      <li><span class="tick">&#10003;</span><span><b>Every edit is faded.</b>
+        Shaped from your attack and release, so the fade in is short and the
+        tail is long &mdash; the way speech actually behaves.</span></li>
+      <li><span class="tick">&#10003;</span><span><b>Every rule is yours.</b>
+        Fourteen controls, all of them live, all of them explained in the log
+        when they discard something.</span></li>
+      <li><span class="tick">&#10003;</span><span><b>Seconds, not minutes.</b>
+        The whole sequence is rebuilt at once rather than edited one cut at a
+        time.</span></li>
+    </ul>
   </div>
 </section>
 
 <section id="try">
   <div class="wrap">
-    <h2>Pricing</h2>
-    <div class="price-card">
-      <!-- PRICE-HERE -->
-      <div class="price">$19<span> / month</span></div>
-      <div class="price-sub">Cancel any time · VAT and sales tax included</div>
-
-      <a class="btn btn-primary" href="BUY-LINK-HERE">Get Hush</a>
-
-      <ul class="includes">
-        <li>Unlimited sequences, unlimited length</li>
-        <li>Two machines per licence — laptop and edit bay</li>
-        <li>All updates while subscribed</li>
-        <li>Keeps working offline for 14 days</li>
-      </ul>
-    </div>
-    <p class="measured">
-      <strong>Try it before you pay.</strong> Install it and run it on the first
-      5 minutes of your own audio, free, for as long as you like. Nothing is
-      held back except the length — the detection, cuts and fades are identical.
+    <h2>Try it on your own audio.</h2>
+    <p class="lede">
+      The free version is the full product, limited to the first five minutes
+      of any sequence. Same detection, same cuts, same fades — so what you hear
+      is exactly what you would get. Paste a licence key to unlock the full
+      length.
     </p>
+
+    <div class="stat-grid" style="margin-bottom:26px">
+      <!-- PRICE-HERE - $19/month is a placeholder, not a recommendation. -->
+      <div class="stat"><b>$19<span style="font-size:15px;color:var(--muted);font-weight:400"> /mo</span></b><span>cancel any time &middot; tax included</span></div>
+      <div class="stat"><b>2</b><span>machines per licence</span></div>
+      <div class="stat"><b>14</b><span>days it keeps working offline</span></div>
+    </div>
+    <div class="buy">
+      <a class="btn ghost" href="BUY-LINK-HERE" id="demoBtn">Download the free version</a>
+    </div>
   </div>
 </section>
 
-<section>
+<section id="faq">
   <div class="wrap">
     <h2>Questions</h2>
 
     <details>
-      <summary>What kind of recordings does it work best on?</summary>
-      <p>
-        Best: everyone's microphone recorded into one device — a Zoom, Rodecaster,
-        Sound Devices or similar multichannel recorder — or separate files that
-        started at the same moment. That is where Hush can use arrival time, and
-        it makes a large difference.
-      </p>
-      <p>
-        Hardest: separate recorders started at different times, with the
-        microphones very close together. On one such session a mic picked up its
-        neighbour <em>louder than its own owner</em>, and the recorders were not
-        sample-locked, so neither loudness nor timing could separate them. Hush
-        still improves it — around 8% of words lost and 33% leakage — but it will
-        not be transformative. That is physics rather than a bug, and no setting
-        fixes it.
-      </p>
-      <p>
-        The 5-minute free mode exists precisely so you can find out which of
-        these your recordings are before paying.
-      </p>
+      <summary>What do I get when I buy?</summary>
+      <p>An email with the installer and your licence key. Drag the file onto
+      the free ZXP Installer, restart Premiere, paste the key into the panel.
+      No Terminal, no command line.</p>
     </details>
 
     <details>
-      <summary>Will it cut out words?</summary>
-      <p>
-        It is deliberately tuned to leave a mic open rather than risk clipping
-        the start of a word — losing speech is far more damaging to an edit than
-        letting a little leakage through. You can push it either way per
-        microphone with a "pick up more / pick up less" control.
-      </p>
-      <p>
-        After every run, Hush reports what happened on each microphone in plain
-        English, and flags any mic that ended up open unusually often or rarely.
-      </p>
+      <summary>How many computers?</summary>
+      <p>Two — a laptop and a studio machine, typically. There is a button in
+      the panel to release a machine if you change computers, so you never need
+      to email me about it.</p>
     </details>
 
     <details>
-      <summary>Does it change my original sequence?</summary>
-      <p>
-        No. Hush builds a new sequence with the cuts applied and leaves yours
-        exactly as it was. If you dislike the result, delete it.
-      </p>
-      <p>
-        One thing to know: because the new sequence is created by rebuilding it
-        as a file, Premiere's importer sets its Color Setup to "Custom" with a
-        blank output colour space, which can make the new sequence
-        <em>preview</em> darker. <strong>Exports are unaffected</strong> — verified
-        by comparing rendered frames. Setting Sequence Settings → Color
-        Management → Color Setup to match your original fixes the preview, and
-        Hush reminds you on the panel after every run.
-      </p>
+      <summary>Does it need an internet connection?</summary>
+      <p>Only to activate. After that it keeps working offline for two weeks at
+      a time, and re-checks quietly whenever you are connected. A dropped
+      connection will never stop you mid-edit.</p>
     </details>
 
     <details>
-      <summary>What do I need to run it?</summary>
-      <p>
-        macOS, and Premiere Pro 22.0 or newer. Everything needed is bundled —
-        there is nothing to install from a terminal and no separate downloads.
-      </p>
-      <p>
-        Installation is dragging one file onto a free ZXP installer.
-      </p>
+      <summary>Will it change my original sequence?</summary>
+      <p>No. It works on a duplicate and leaves yours untouched. Cuts are muted
+      rather than deleted, so nothing is ever lost.</p>
+      <p>One thing to know: because the new sequence is created by rebuilding it
+      as a file, Premiere&rsquo;s importer leaves its Color Setup on
+      &ldquo;Custom&rdquo; with a blank output colour space, which can make the new
+      sequence <em>preview</em> darker. <b>Exports are unaffected</b> &mdash;
+      verified by comparing rendered frames. Setting Sequence Settings &rarr;
+      Color Management &rarr; Color Setup to match your original fixes the
+      preview, and Hush reminds you on the panel after every run.</p>
     </details>
 
     <details>
-      <summary>How does the licence work across my machines?</summary>
-      <p>
-        One licence covers two machines. There is a "Remove from this Mac"
-        button that frees a slot, so changing computers does not require
-        emailing anybody.
-      </p>
-      <p>
-        If Hush cannot reach the licence server it keeps working for 14 days
-        rather than locking you out — an editor on a train with a valid licence
-        should still be able to cut. Only an explicit rejection from the store
-        ends access.
-      </p>
+      <summary>Where does it work well, and where does it struggle?</summary>
+      <p><b>Best:</b> every microphone recorded into one device &mdash; a Zoom,
+      Rodecaster, Sound Devices or similar multichannel recorder &mdash; or
+      separate files that started at the same moment. That is where arrival time
+      is available, and it makes a large difference.</p>
+      <p><b>Hardest:</b> separate recorders started at different times, with the
+      microphones very close together. On one such session a mic picked up its
+      neighbour <em>louder than its own owner</em>, and the recorders were not
+      sample&#8209;locked, so neither loudness nor timing could separate them. Hush
+      still improves it &mdash; around 8% of words caught late and 33% leakage
+      &mdash; but it will not be transformative. That is physics rather than a
+      bug, and no setting fixes it.</p>
+      <p>The free 5&#8209;minute mode exists precisely so you can find out which of
+      these your recordings are before paying anything.</p>
     </details>
 
     <details>
-      <summary>Can I get a refund?</summary>
-      <p>
-        Yes — within 14 days of purchase, no questions asked. Email
-        <a href="mailto:EMAIL-HERE">EMAIL-HERE</a> and it will be refunded.
-      </p>
-      <p>
-        Given the free 5-minute mode runs the full detection on your own audio,
-        you should know whether Hush suits your recordings before you spend
-        anything.
-      </p>
+      <summary>Premiere shows a “Translation Report” when it finishes. Is that an error?</summary>
+      <p>No. Hush rebuilds your sequence as a file and imports it back, and
+      Premiere raises that notice on any imported sequence — it is telling you
+      a report was written, not that anything failed. Click OK. A sequence
+      containing nests imports as more than one sequence, so you may see
+      several.</p>
     </details>
 
     <details>
-      <summary>How is this different from AutoPod?</summary>
-      <p>
-        AutoPod is a broader multi-camera and audio suite. Hush does one thing —
-        deciding who is speaking and muting everyone else — and the whole design
-        is built around getting that decision right, including using arrival
-        time between microphones, which is unusual in this category.
-      </p>
-      <p>
-        If you need multi-camera switching, AutoPod does more. If the audio is
-        the part costing you an afternoon, Hush is aimed squarely at it.
-      </p>
+      <summary>Does it need a multichannel recorder?</summary>
+      <p>No, but it does more with one. Judging by mic distance needs every
+      microphone to be a channel of a single recording, because that is the only
+      way their clocks match — separate recorders drift apart by far more than
+      the millisecond being measured. With a file per microphone Hush says so in
+      the log and decides on level instead, which is how every other tool works.
+      It is at its best on a field recorder.</p>
     </details>
 
     <details>
-      <summary>Who makes it?</summary>
-      <p>
-        Hush is built by Xtravalake, an independent developer of Premiere Pro
-        extensions. Support goes to a person, not a queue:
-        <a href="mailto:EMAIL-HERE">EMAIL-HERE</a>.
-      </p>
+      <summary>Windows?</summary>
+      <p>Not yet. Hush is macOS only for now.</p>
     </details>
 
+    <details>
+      <summary>Refunds?</summary>
+      <p>Fourteen days, no questions asked &mdash; email
+      <a href="mailto:EMAIL-HERE">EMAIL-HERE</a> and it will be refunded and
+      cancelled. The free version runs the full detection on your own audio
+      first, so you should know whether Hush suits your recordings before you
+      spend anything.</p>
+    </details>
   </div>
 </section>
 
 <footer>
   <div class="wrap">
-    <div class="foot-row">
-      <a href="mailto:EMAIL-HERE">Support</a>
-      <a href="#try">Pricing</a>
-      <a href="terms.html">Terms</a>
-      <a href="privacy.html">Privacy</a>
-    </div>
-    <p style="margin:0; font-size:13px;">
-      © <span id="yr">2026</span> Xtravalake. Hush is not affiliated with or
-      endorsed by Adobe. Adobe and Premiere Pro are trademarks of Adobe Inc.
+    <span>© <span id="yr">2026</span> Xtravalake</span>
+    <span class="spacer"></span>
+    <a href="terms.html">Terms</a>
+    <a href="privacy.html">Privacy</a>
+    <a href="mailto:EMAIL-HERE">Contact</a>
+  </div>
+  <div class="wrap" style="margin-top:16px; display:block">
+    <p style="margin:0 0 8px; font-size:12.5px; max-width:52em">
+      Hush is an independent product. Adobe and Premiere Pro are trademarks of
+      Adobe Inc., who neither endorse it nor are connected with it.
     </p>
-    <p style="margin:10px 0 0; font-size:13px;">
+    <p style="margin:0; font-size:12.5px; max-width:52em">
       Hush bundles FFmpeg, used under the
       <a href="https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html">LGPL v2.1</a>.
       Source for the bundled build is available on request.
     </p>
   </div>
 </footer>
+
+<script>
+/* ---------------------------------------------------------------------------
+   The timeline graphic, from real segment data.
+   Drawn rather than shipped as a GIF: it is a fraction of the weight, stays
+   sharp on any display, and the numbers can be replaced with a real export
+   without opening an animation tool.
+--------------------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------------------
+   A waveform, drawn once per track and shared by every graphic on the page.
+
+   Deterministic from a seed so it does not jitter when a slider moves - a
+   redrawn timeline that also reshuffles its waveform reads as noise rather
+   than as the same audio being re-cut.
+--------------------------------------------------------------------------- */
+function waveform(seed, segments, duration) {
+  var W = 1000, H = 100, MID = H / 2, STEP = 2;
+  var s = seed;
+  function rnd() { s = (s * 1664525 + 1013904223) % 4294967296; return s / 4294967296; }
+
+  function loudAt(x) {
+    // Speech where a segment says so, room tone everywhere else.
+    var tSec = (x / W) * duration;
+    for (var i = 0; i < segments.length; i++) {
+      if (tSec >= segments[i][0] && tSec <= segments[i][1]) {
+        var into = (tSec - segments[i][0]) / Math.max(0.001, segments[i][1] - segments[i][0]);
+        // Fade the syllable envelope in and out so words have shape.
+        return 0.55 + 0.45 * Math.sin(Math.PI * Math.min(1, into * 1.6));
+      }
+    }
+    return 0.06;
+  }
+
+  var up = [], down = [];
+  for (var x = 0; x <= W; x += STEP) {
+    var amp = loudAt(x) * (0.45 + rnd() * 0.55) * (MID - 3);
+    up.push(x + ' ' + (MID - amp));
+    down.unshift(x + ' ' + (MID + amp));
+  }
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">' +
+         '<path d="M ' + up.join(' L ') + ' L ' + down.join(' L ') + ' Z"/></svg>';
+}
+
+(function () {
+  // start%, width% per track - taken from an actual four-mic run.
+  var TRACKS = [
+    ['A1', [[0,6],[9,11],[24,8],[36,14],[55,5],[64,12],[81,7],[92,8]]],
+    ['A2', [[7,8],[21,6],[33,9],[50,10],[63,4],[72,12],[88,6]]],
+    ['A3', [[16,7],[30,5],[44,9],[59,6],[70,5],[84,7],[95,4]]],
+    ['A4', [[3,5],[19,4],[41,6],[52,7],[67,4],[78,9],[90,5]]]
+  ];
+
+  var host = document.getElementById('tlDemo');
+  if (!host) return;
+
+  TRACKS.forEach(function (t, i) {
+    var row = document.createElement('div');
+    row.className = 'tl-row';
+
+    var name = document.createElement('span');
+    name.className = 'tl-name';
+    name.textContent = t[0];
+
+    var track = document.createElement('span');
+    track.className = 'tl-track';
+
+    // Percentages here, so the waveform is described in the same units.
+    track.innerHTML = waveform(i * 7919 + 13,
+      t[1].map(function (s) { return [s[0], s[0] + s[1]]; }), 100);
+
+    /*
+     * Every clip is drawn, live and muted alike - that IS the product: nothing
+     * is deleted, it is disabled. Staggering the animation per track keeps it
+     * from looking like a single blinking block.
+     */
+    var cursor = 0;
+    t[1].forEach(function (seg) {
+      if (seg[0] > cursor) track.appendChild(clip(cursor, seg[0] - cursor, false, i));
+      track.appendChild(clip(seg[0], seg[1], true, i));
+      cursor = seg[0] + seg[1];
+    });
+    if (cursor < 100) track.appendChild(clip(cursor, 100 - cursor, false, i));
+
+    row.appendChild(name);
+    row.appendChild(track);
+    host.appendChild(row);
+  });
+
+  function clip(left, width, live, trackIndex) {
+    var el = document.createElement('span');
+    el.className = 'tl-clip ' + (live ? 'on' : 'off');
+    el.style.left = left + '%';
+    el.style.width = width + '%';
+    el.style.animationDelay = (trackIndex * 0.14) + 's';
+    return el;
+  }
+})();
+</script>
+
+<script>
+/* ---------------------------------------------------------------------------
+   The settings playground.
+
+   The arithmetic is the panel's, not a mime of it: bridging really merges
+   gaps below the threshold, and the fade split really comes from the ratio of
+   attack to release, which is what makes moving a slider feel like the thing
+   it does in Premiere. Only the segments are canned - a two-minute sample of
+   a real episode rather than a live analysis.
+--------------------------------------------------------------------------- */
+(function () {
+  var host = document.getElementById('playTl');
+  if (!host) return;
+
+  // [startSec, endSec] on a 120-second sample. A2's short entries around A1's
+  // speech are the spill - what Echo Reject is deciding about.
+  var SPEECH = {
+    A1: [[1.2,4.6],[4.85,8.9],[10.4,13.1],[13.35,17.8],[19.6,23.4],[23.75,27.9],
+         [30.2,33.0],[33.7,38.6],[41.0,44.2],[44.45,48.9],[51.2,55.0],[55.7,59.2]],
+    A2: [[9.2,10.1],[18.4,19.4],[28.3,29.1],[29.45,30.0],[39.4,40.7],[49.5,50.9]]
+  };
+
+  // Spill: A2 hearing A1, at the same moments A1 is talking.
+  var SPILL = SPEECH.A1.map(function (s) { return [s[0] + 0.05, s[1] + 0.05]; });
+
+  var DUR = 60;
+
+  // What each mic actually picked up, spill included - the waveform, as
+  // opposed to what the gate decides to keep.
+  var RAW = {
+    A1: SPEECH.A1.concat(SPEECH.A2),
+    A2: SPEECH.A2.concat(SPILL)
+  };
+  var els = {
+    bridge:  document.getElementById('pBridge'),
+    fade:    document.getElementById('pFade'),
+    release: document.getElementById('pRelease'),
+    echo:    document.getElementById('pEcho')
+  };
+  var echoOn = true;
+
+  function bridge(segs, gapMs) {
+    var gap = gapMs / 1000, out = [], cur = null;
+    segs.slice().sort(function (a, b) { return a[0] - b[0]; }).forEach(function (s) {
+      if (cur && s[0] - cur[1] <= gap) { cur[1] = Math.max(cur[1], s[1]); }
+      else { cur = [s[0], s[1]]; out.push(cur); }
+    });
+    return out;
+  }
+
+  /*
+   * The same split the panel uses: fade length is the average, and the ratio
+   * of attack to release decides how much lands on each end. Speech starts
+   * fast and ends slowly, so one number for both makes one of them wrong.
+   */
+  function shape(fadeMs, attackMs, releaseMs) {
+    if (!fadeMs) return { inMs: 0, outMs: 0 };
+    var total = attackMs + releaseMs;
+    if (!total) return { inMs: fadeMs, outMs: fadeMs };
+    return {
+      inMs:  Math.max(8,  Math.round(fadeMs * 2 * (attackMs  / total))),
+      outMs: Math.max(15, Math.round(fadeMs * 2 * (releaseMs / total)))
+    };
+  }
+
+  function render() {
+    var gapMs   = +els.bridge.value;
+    var fadeMs  = +els.fade.value;
+    var relMs   = +els.release.value;
+    var sh      = shape(fadeMs, 20, relMs);
+
+    document.getElementById('vBridge').textContent  = gapMs + ' ms';
+    document.getElementById('vFade').textContent    = fadeMs + ' ms';
+    document.getElementById('vRelease').textContent = relMs + ' ms';
+    document.getElementById('rShape').textContent   = sh.inMs + ' / ' + sh.outMs + ' ms';
+
+    var a1 = bridge(SPEECH.A1, gapMs);
+    var a2 = bridge(echoOn ? SPEECH.A2 : SPEECH.A2.concat(SPILL), gapMs);
+
+    host.innerHTML = '';
+    var clips = 0;
+    [['A1', a1, 4211], ['A2', a2, 9137]].forEach(function (pair) {
+      var row = document.createElement('div');
+      row.className = 'tl-row';
+
+      var name = document.createElement('span');
+      name.className = 'tl-name';
+      name.textContent = pair[0];
+
+      var track = document.createElement('span');
+      track.className = 'tl-track';
+
+      /*
+       * The waveform is the RAW audio - every word this mic picked up,
+       * including the spill. It never changes as the sliders move; only which
+       * parts stay lit does. That is the whole point being demonstrated, and
+       * redrawing it per keystroke would hide it.
+       */
+      track.innerHTML = waveform(pair[2], RAW[pair[0]], DUR);
+
+      var cursor = 0;
+      pair[1].forEach(function (seg) {
+        if (seg[0] > cursor) { track.appendChild(clip(cursor, seg[0] - cursor, false, sh)); clips++; }
+        track.appendChild(clip(seg[0], seg[1] - seg[0], true, sh));
+        clips++;
+        cursor = seg[1];
+      });
+      if (cursor < DUR) { track.appendChild(clip(cursor, DUR - cursor, false, sh)); clips++; }
+
+      row.appendChild(name); row.appendChild(track);
+      host.appendChild(row);
+    });
+
+    document.getElementById('rClips').textContent = clips;
+    document.getElementById('rFades').textContent = fadeMs ? (a1.length + a2.length) * 2 : 0;
+  }
+
+  function clip(startSec, lenSec, live, sh) {
+    var el = document.createElement('span');
+    el.className = 'tl-clip' + (live ? '' : ' off');
+    el.style.left  = (startSec / DUR * 100) + '%';
+    el.style.width = (lenSec  / DUR * 100) + '%';
+
+    if (!live) return el;
+
+    /*
+     * The fade drawn as it is heard: a short ramp in, a long one out. At this
+     * zoom a 9 ms fade is sub-pixel, so it is scaled to stay visible - the
+     * shape is what is being shown, not the duration.
+     */
+    var pxIn  = Math.max(1, Math.min(28, sh.inMs  / 4));
+    var pxOut = Math.max(1, Math.min(28, sh.outMs / 4));
+    var lit = 'rgba(124,179,66,.62)';
+    el.style.background =
+      'linear-gradient(to right, rgba(18,26,12,.72) 0, ' + lit + ' ' + pxIn + 'px,' +
+      ' ' + lit + ' calc(100% - ' + pxOut + 'px), rgba(18,26,12,.72) 100%)';
+    return el;
+  }
+
+  [els.bridge, els.fade, els.release].forEach(function (r) {
+    r.addEventListener('input', render);
+  });
+  els.echo.addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    echoOn = b.dataset.v === '1';
+    [].forEach.call(els.echo.querySelectorAll('button'), function (x) {
+      x.setAttribute('aria-pressed', String(x === b));
+    });
+    render();
+  });
+
+  render();
+})();
+
+/* ---------------------------------------------------------------------------
+   One file fanning out into five tracks. The curves are drawn to wherever the
+   rows land, so the layout stays honest at any width.
+--------------------------------------------------------------------------- */
+(function () {
+  var fan = document.getElementById('fanDemo');
+  if (!fan) return;
+
+  var CH = [
+    ['ch 1', [[4,13],[26,9],[47,15],[70,11],[88,8]]],
+    ['ch 2', [[16,8],[38,6],[64,4],[81,5]]],
+    ['ch 3', [[0,3],[20,4],[36,8],[58,5],[85,6]]],
+    ['ch 4', [[9,5],[30,6],[52,10],[74,6],[95,4]]],
+    ['ch 5', [[13,2],[44,3],[62,2],[79,3]]]
+  ];
+
+  var outs = fan.querySelector('.outs');
+  var svg  = fan.querySelector('svg');
+  var n = CH.length;
+
+  CH.forEach(function (c, i) {
+    var row = document.createElement('div');
+    row.className = 'out';
+    row.style.top = (i * (100 / n) + (100 / n / 2) - 6) + '%';
+
+    var ch = document.createElement('span');
+    ch.className = 'ch';
+    ch.textContent = c[0];
+
+    var strip = document.createElement('span');
+    strip.className = 'strip';
+    c[1].forEach(function (s) {
+      var b = document.createElement('i');
+      b.style.left = s[0] + '%';
+      b.style.width = s[1] + '%';
+      strip.appendChild(b);
+    });
+
+    row.appendChild(ch); row.appendChild(strip);
+    outs.appendChild(row);
+
+    // viewBox is 0..100 x 0..210, non-uniform: x is a percentage, y is pixels.
+    var y = (i * (210 / n)) + (210 / n / 2);
+    var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M 0 105 C 45 105, 55 ' + y + ', 100 ' + y);
+    path.setAttribute('vector-effect', 'non-scaling-stroke');
+    svg.appendChild(path);
+  });
+
+  // The lines start at the file block, which sits 148px wide plus a gap.
+  svg.style.left = '160px';
+  svg.style.width = 'calc(100% - 200px)';
+})();
+</script>
 
 <script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
 

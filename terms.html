@@ -4,108 +4,240 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Terms — Hush</title>
+<meta name="robots" content="index,follow">
+
 <style>
-  :root { --bg:#17181a; --line:#2e3135; --ink:#e8e8e8; --ink-dim:#8d8d8d;
-          --ink-mid:#b4b4b4; --gold:#d8b23c; --gold-dk:#8a7a3c; }
-  * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--ink); font-size:16px; line-height:1.6;
-         font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,sans-serif;
-         -webkit-font-smoothing:antialiased; }
-  .wrap { max-width:680px; margin:0 auto; padding:64px 24px 80px; }
-  a { color:var(--gold); }
-  h1 { font-size:32px; margin:0 0 8px; letter-spacing:-0.02em; }
-  h2 { font-size:19px; margin:36px 0 10px; }
-  p, li { color:var(--ink-mid); margin:0 0 14px; }
-  ul { padding-left:22px; }
-  strong { color:var(--ink); font-weight:600; }
-  .date { color:var(--ink-dim); font-size:14px; margin-bottom:36px; }
-  .back { display:inline-block; margin-bottom:32px; font-size:14px; }
-  .note { border-left:2px solid var(--gold-dk); padding-left:14px; font-size:14px;
-          color:var(--ink-dim); }
+/* Same palette and furniture as the front page, so this does not feel like a
+   different site. Kept in the file rather than shared, because a legal page
+   that breaks when a stylesheet moves is worse than a duplicated block. */
+:root {
+  --bg:      #141414;
+  --panel:   #1d1d1d;
+  --line:    #2e2e2e;
+  --ink:     #ebebeb;
+  --muted:   #9a9a9a;
+  --live:    #7cb342;
+  --radius:  10px;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+a { color: inherit; }
+
+nav {
+  border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(20,20,20,.9);
+  backdrop-filter: blur(8px);
+}
+nav .wrap { display: flex; align-items: center; gap: 28px; height: 62px; }
+.brand { display: flex; align-items: center; gap: 9px; font-weight: 650; letter-spacing: -.01em; text-decoration: none; }
+.brand svg { display: block; }
+nav a.link { color: var(--muted); text-decoration: none; font-size: 14.5px; }
+nav a.link:hover { color: var(--ink); }
+nav .spacer { margin-left: auto; }
+
+header.doc { padding: 60px 0 30px; }
+h1 { font-size: clamp(32px, 5vw, 42px); letter-spacing: -.03em; margin: 0 0 10px; line-height: 1.08; }
+.updated { color: var(--muted); font-size: 14px; margin: 0; }
+
+main { padding-bottom: 30px; }
+section.doc { padding: 26px 0; border-top: 1px solid var(--line); }
+h2 { font-size: 20px; letter-spacing: -.015em; margin: 0 0 12px; }
+p { color: var(--muted); margin: 0 0 15px; max-width: 44em; }
+p:last-child { margin-bottom: 0; }
+b, strong { color: var(--ink); font-weight: 600; }
+ul { color: var(--muted); max-width: 44em; padding-left: 22px; margin: 0 0 15px; }
+li { margin-bottom: 9px; }
+
+.note {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  font-size: 14px;
+  color: var(--muted);
+  max-width: 44em;
+}
+.note b { color: var(--ink); }
+
+footer {
+  border-top: 1px solid var(--line);
+  padding: 34px 0 60px; color: var(--muted); font-size: 13.5px;
+}
+footer .wrap { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
+footer a { color: var(--muted); }
+footer .spacer { margin-left: auto; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <a class="back" href="index.html">← Hush</a>
-  <h1>Terms</h1>
-  <p class="date">Last updated 21 August 2026</p>
 
-  <h2>What you are buying</h2>
-  <p>
-    A subscription licence to use Hush, a Premiere Pro extension, on up to
-    <strong>two computers</strong> at a time. You can free a slot at any point
-    using <em>Remove from this Mac</em> in the panel.
-  </p>
-  <p>
-    The licence is for you or your business to use. You may not resell it,
-    share the key publicly, or redistribute the software.
-  </p>
+<nav>
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <svg width="30" height="14" viewBox="0 0 44 20" aria-hidden="true">
+        <path d="M2 10 L5 10 L7 4 L9 16 L11 7 L13 13 L15 10 L18 10"
+              fill="none" stroke="#7cb342" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M26 10 L29 10 L31 5 L33 15 L35 8 L37 12 L39 10 L42 10"
+              fill="none" stroke="#7cb342" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Hush
+    </a>
+    <span class="spacer"></span>
+    <a class="link" href="index.html#how">How it works</a>
+    <a class="link" href="index.html#try">Pricing</a>
+    <a class="link" href="index.html#faq">FAQ</a>
+  </div>
+</nav>
 
-  <h2>Who you are buying from</h2>
-  <p>
-    Purchases are processed by <strong>Lemon Squeezy</strong>, who act as the
-    merchant of record. They are the seller for the purposes of the
-    transaction, handle payment and collect any VAT or sales tax due. Their
-    terms apply to the sale itself. Hush is developed by Xtravalake.
-  </p>
+<header class="doc">
+  <div class="wrap">
+    <h1>Terms</h1>
+    <p class="updated">Last updated 21 August 2026</p>
+  </div>
+</header>
 
-  <h2>Refunds</h2>
-  <p>
-    <strong>14 days, no questions asked.</strong> Email
-    <a href="mailto:EMAIL-HERE">EMAIL-HERE</a> and the subscription will be
-    refunded and cancelled.
-  </p>
-  <p>
-    Hush includes a free mode that runs the full detection on the first five
-    minutes of your own audio, so you can find out whether it suits your
-    recordings before paying anything. Please use it.
-  </p>
+<main>
+<section class="doc">
+  <div class="wrap">
+    <h2>What you are buying</h2>
+    <p>
+      A subscription licence to use Hush, an extension for Adobe Premiere Pro on
+      macOS, on up to <b>two computers</b> at a time. You can free a slot at any
+      point using <em>Remove from this Mac</em> in the panel, so changing
+      computers does not require emailing anybody.
+    </p>
+    <p>
+      The licence is for you or your business to use. You may not resell it,
+      share the key publicly, or redistribute the software.
+    </p>
+  </div>
+</section>
 
-  <h2>Cancelling</h2>
-  <p>
-    Cancel any time; you keep access until the end of the period you have paid
-    for. After that Hush reverts to the free 5-minute mode rather than
-    disappearing — sequences you have already produced are unaffected, since
-    they are ordinary Premiere sequences with no dependency on Hush.
-  </p>
+<section class="doc">
+  <div class="wrap">
+    <h2>Who you are buying from</h2>
+    <p>
+      Purchases are processed by <b>Lemon Squeezy</b>, who act as the merchant of
+      record. They are the seller for the purposes of the transaction, handle
+      payment, and collect any VAT or sales tax due. Their terms apply to the
+      sale itself. Hush is developed by Xtravalake.
+    </p>
+    <p>
+      Because Lemon Squeezy is the merchant of record, your card statement will
+      show <b>LEMSQZY*</b> followed by the store name rather than Xtravalake.
+    </p>
+  </div>
+</section>
 
-  <h2>What is and is not promised</h2>
-  <p>
-    Hush improves multi-microphone audio; it does not promise a specific
-    accuracy on your recordings, because results depend heavily on how they
-    were made. The website states measured figures from real sessions,
-    including where Hush performs poorly. Separate recorders with microphones
-    very close together are a known hard case and are described openly.
-  </p>
-  <p>
-    Hush is provided as-is. It creates a <strong>new sequence</strong> and does
-    not alter your original, but you remain responsible for your project and
-    your backups. To the extent the law allows, liability is limited to what
-    you paid.
-  </p>
+<section class="doc">
+  <div class="wrap">
+    <h2>Refunds</h2>
+    <p>
+      <b>Fourteen days, no questions asked.</b> Email
+      <a href="mailto:EMAIL-HERE">EMAIL-HERE</a> and the subscription will be
+      refunded and cancelled.
+    </p>
+    <p>
+      Hush includes a free mode that runs the full detection on the first five
+      minutes of your own audio, so you can find out whether it suits your
+      recordings before paying anything. Please use it.
+    </p>
+  </div>
+</section>
 
-  <h2>Bundled software</h2>
-  <p>
-    Hush includes a build of FFmpeg used under the
-    <a href="https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html">LGPL v2.1</a>.
-    The corresponding source is available on request at the address below.
-  </p>
+<section class="doc">
+  <div class="wrap">
+    <h2>Cancelling</h2>
+    <p>
+      Cancel any time; you keep access until the end of the period you have paid
+      for. After that Hush reverts to the free five&#8209;minute mode rather than
+      disappearing.
+    </p>
+    <p>
+      Sequences you have already produced are unaffected either way. They are
+      ordinary Premiere sequences with no dependency on Hush &mdash; nothing
+      stops working, expires, or needs the panel installed to open.
+    </p>
+  </div>
+</section>
 
-  <h2>Not affiliated with Adobe</h2>
-  <p>
-    Hush is an independent product. Adobe and Premiere Pro are trademarks of
-    Adobe Inc., who neither endorse nor are connected with it.
-  </p>
+<section class="doc">
+  <div class="wrap">
+    <h2>What is and is not promised</h2>
+    <p>
+      Hush improves multi&#8209;microphone audio. It does not promise a specific
+      accuracy on your recordings, because results depend heavily on how they
+      were made. The front page states measured figures from real sessions,
+      <b>including where Hush performs poorly</b>: separate recorders with
+      microphones very close together are a known hard case, and it is described
+      openly rather than buried.
+    </p>
+    <p>
+      Hush is provided as&#8209;is. It creates a <b>new sequence</b> and does not
+      alter your original, but you remain responsible for your project and your
+      backups. To the extent the law allows, liability is limited to what you
+      paid.
+    </p>
+  </div>
+</section>
 
-  <h2>Contact</h2>
-  <p><a href="mailto:EMAIL-HERE">EMAIL-HERE</a></p>
+<section class="doc">
+  <div class="wrap">
+    <h2>Bundled software</h2>
+    <p>
+      Hush includes a build of FFmpeg used under the
+      <a href="https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html">LGPL v2.1</a>.
+      The corresponding source is available on request at the address below.
+    </p>
+  </div>
+</section>
 
-  <p class="note">
-    These terms are written to be readable rather than exhaustive, and they are
-    not legal advice. Lemon Squeezy's own terms govern the transaction as
-    merchant of record; if you want terms reviewed against a specific
-    jurisdiction, that is a question for a solicitor.
-  </p>
-</div>
+<section class="doc">
+  <div class="wrap">
+    <h2>Not affiliated with Adobe</h2>
+    <p>
+      Hush is an independent product. Adobe and Premiere Pro are trademarks of
+      Adobe Inc., who neither endorse it nor are connected with it.
+    </p>
+  </div>
+</section>
+
+<section class="doc">
+  <div class="wrap">
+    <h2>Contact</h2>
+    <p><a href="mailto:EMAIL-HERE">EMAIL-HERE</a></p>
+    <p class="note">
+      These terms are written to be readable rather than exhaustive, and they
+      are <b>not legal advice</b>. Lemon Squeezy&rsquo;s own terms govern the
+      transaction as merchant of record. If you want terms reviewed against a
+      specific jurisdiction, that is a question for a solicitor.
+    </p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© <span id="yr">2026</span> Xtravalake</span>
+    <span class="spacer"></span>
+    <a href="index.html">Hush</a>
+    <a href="privacy.html">Privacy</a>
+    <a href="mailto:EMAIL-HERE">Contact</a>
+  </div>
+</footer>
+
+<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+
 </body>
 </html>

@@ -4,90 +4,218 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Privacy — Hush</title>
+<meta name="robots" content="index,follow">
+
 <style>
-  :root { --bg:#17181a; --line:#2e3135; --ink:#e8e8e8; --ink-dim:#8d8d8d;
-          --ink-mid:#b4b4b4; --gold:#d8b23c; --gold-dk:#8a7a3c; }
-  * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--ink); font-size:16px; line-height:1.6;
-         font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,sans-serif;
-         -webkit-font-smoothing:antialiased; }
-  .wrap { max-width:680px; margin:0 auto; padding:64px 24px 80px; }
-  a { color:var(--gold); }
-  h1 { font-size:32px; margin:0 0 8px; letter-spacing:-0.02em; }
-  h2 { font-size:19px; margin:36px 0 10px; }
-  p, li { color:var(--ink-mid); margin:0 0 14px; }
-  ul { padding-left:22px; }
-  strong { color:var(--ink); font-weight:600; }
-  .date { color:var(--ink-dim); font-size:14px; margin-bottom:36px; }
-  .back { display:inline-block; margin-bottom:32px; font-size:14px; }
-  .note { border-left:2px solid var(--gold-dk); padding-left:14px; font-size:14px;
-          color:var(--ink-dim); }
+/* Same palette and furniture as the front page. Duplicated deliberately: a
+   legal page that breaks when a stylesheet moves is worse than a repeated
+   block. */
+:root {
+  --bg:      #141414;
+  --panel:   #1d1d1d;
+  --line:    #2e2e2e;
+  --ink:     #ebebeb;
+  --muted:   #9a9a9a;
+  --live:    #7cb342;
+  --radius:  10px;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+a { color: inherit; }
+
+nav {
+  border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(20,20,20,.9);
+  backdrop-filter: blur(8px);
+}
+nav .wrap { display: flex; align-items: center; gap: 28px; height: 62px; }
+.brand { display: flex; align-items: center; gap: 9px; font-weight: 650; letter-spacing: -.01em; text-decoration: none; }
+.brand svg { display: block; }
+nav a.link { color: var(--muted); text-decoration: none; font-size: 14.5px; }
+nav a.link:hover { color: var(--ink); }
+nav .spacer { margin-left: auto; }
+
+header.doc { padding: 60px 0 30px; }
+h1 { font-size: clamp(32px, 5vw, 42px); letter-spacing: -.03em; margin: 0 0 10px; line-height: 1.08; }
+.updated { color: var(--muted); font-size: 14px; margin: 0; }
+
+main { padding-bottom: 30px; }
+section.doc { padding: 26px 0; border-top: 1px solid var(--line); }
+h2 { font-size: 20px; letter-spacing: -.015em; margin: 0 0 12px; }
+p { color: var(--muted); margin: 0 0 15px; max-width: 44em; }
+p:last-child { margin-bottom: 0; }
+b, strong { color: var(--ink); font-weight: 600; }
+ul { color: var(--muted); max-width: 44em; padding-left: 22px; margin: 0 0 15px; }
+li { margin-bottom: 9px; }
+
+/* The one claim worth making loudly, because it is the one people care about
+   and it happens to be structurally true rather than a promise. */
+.headline {
+  background: var(--panel);
+  border: 1px solid #3b5426;
+  border-left: 3px solid var(--live);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  max-width: 44em;
+}
+.headline b { display: block; color: var(--ink); font-size: 17px; margin-bottom: 6px; }
+.headline p { margin: 0; }
+
+.note {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  font-size: 14px;
+  color: var(--muted);
+  max-width: 44em;
+}
+.note b { color: var(--ink); }
+
+footer {
+  border-top: 1px solid var(--line);
+  padding: 34px 0 60px; color: var(--muted); font-size: 13.5px;
+}
+footer .wrap { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
+footer a { color: var(--muted); }
+footer .spacer { margin-left: auto; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <a class="back" href="index.html">← Hush</a>
-  <h1>Privacy</h1>
-  <p class="date">Last updated 21 August 2026</p>
 
-  <h2>Your audio never leaves your computer</h2>
-  <p>
-    Hush analyses audio entirely on your own machine. Nothing is uploaded, no
-    audio is sent anywhere, and there is no cloud processing step. This is not
-    a policy choice that could change quietly — it is how the software is
-    built. It works with no internet connection at all.
-  </p>
+<nav>
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <svg width="30" height="14" viewBox="0 0 44 20" aria-hidden="true">
+        <path d="M2 10 L5 10 L7 4 L9 16 L11 7 L13 13 L15 10 L18 10"
+              fill="none" stroke="#7cb342" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M26 10 L29 10 L31 5 L33 15 L35 8 L37 12 L39 10 L42 10"
+              fill="none" stroke="#7cb342" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Hush
+    </a>
+    <span class="spacer"></span>
+    <a class="link" href="index.html#how">How it works</a>
+    <a class="link" href="index.html#try">Pricing</a>
+    <a class="link" href="index.html#faq">FAQ</a>
+  </div>
+</nav>
 
-  <h2>There is no analytics or telemetry</h2>
-  <p>
-    Hush does not track how you use it, does not report crashes automatically,
-    and contains no analytics of any kind. The only network request it ever
-    makes is to check your licence.
-  </p>
+<header class="doc">
+  <div class="wrap">
+    <h1>Privacy</h1>
+    <p class="updated">Last updated 21 August 2026</p>
+  </div>
+</header>
 
-  <h2>What the licence check sends</h2>
-  <p>When you activate or re-check a licence, Hush sends to the store:</p>
-  <ul>
-    <li>your licence key</li>
-    <li>
-      a <strong>machine identifier</strong>, which is a one-way SHA-256 hash of
-      your computer's hostname, your username and your operating system. It
-      cannot be reversed into any of those. Its only purpose is to let the store
-      count how many machines a licence is used on, and to let
-      <em>Remove from this Mac</em> free that slot again.
-    </li>
-  </ul>
-  <p>
-    That request goes to Lemon Squeezy, who process the payment and issue the
-    licence. Their privacy policy covers what they hold, and it is where your
-    name, email and payment details live — Hush never sees your payment
-    information, and neither does its developer.
-  </p>
+<main>
+<section class="doc">
+  <div class="wrap">
+    <div class="headline">
+      <b>Your audio never leaves your computer.</b>
+      <p>
+        Hush analyses audio entirely on your own machine. Nothing is uploaded,
+        no audio is sent anywhere, and there is no cloud processing step. This
+        is not a policy that could quietly change &mdash; it is how the software
+        is built. Hush works with no internet connection at all.
+      </p>
+    </div>
+  </div>
+</section>
 
-  <h2>What is stored on your computer</h2>
-  <p>
-    Your licence key and the date it was last verified are saved in a small
-    file in your user Library folder, so Hush does not have to ask the store
-    every time you open it. Removing the licence deletes it.
-  </p>
+<section class="doc">
+  <div class="wrap">
+    <h2>There is no analytics or telemetry</h2>
+    <p>
+      Hush does not track how you use it, does not report crashes
+      automatically, and contains no analytics of any kind. The only network
+      request it ever makes is to check your licence.
+    </p>
+  </div>
+</section>
 
-  <h2>Email</h2>
-  <p>
-    If you email support, that email is kept only as long as needed to help
-    you. It is not added to a mailing list.
-  </p>
+<section class="doc">
+  <div class="wrap">
+    <h2>What the licence check sends</h2>
+    <p>When you activate or re&#8209;check a licence, Hush sends to the store:</p>
+    <ul>
+      <li>your licence key</li>
+      <li>
+        a <b>machine identifier</b> &mdash; a one&#8209;way SHA&#8209;256 hash of your
+        computer&rsquo;s hostname, your username and your operating system. It
+        cannot be reversed into any of those. Its only purpose is to let the
+        store count how many machines a licence is used on, and to let
+        <em>Remove from this Mac</em> free that slot again.
+      </li>
+    </ul>
+    <p>
+      That request goes to Lemon Squeezy, who process the payment and issue the
+      licence. Their privacy policy covers what they hold, and it is where your
+      name, email and payment details live. Hush never sees your payment
+      information, and neither does its developer.
+    </p>
+  </div>
+</section>
 
-  <h2>Contact</h2>
-  <p>
-    Questions about any of this: <a href="mailto:EMAIL-HERE">EMAIL-HERE</a>.
-  </p>
+<section class="doc">
+  <div class="wrap">
+    <h2>What is stored on your computer</h2>
+    <p>
+      Your licence key and the date it was last verified are saved in a small
+      file in your user Library folder, so Hush does not have to ask the store
+      every time you open it. Removing the licence deletes it.
+    </p>
+  </div>
+</section>
 
-  <p class="note">
-    This describes how Hush actually behaves, and each claim above is
-    verifiable in the software. It is written plainly rather than in legal
-    language, and it is not a substitute for advice from a solicitor if you
-    need a policy that satisfies a specific regulator.
-  </p>
-</div>
+<section class="doc">
+  <div class="wrap">
+    <h2>Email</h2>
+    <p>
+      If you email support, that email is kept only as long as needed to help
+      you. It is not added to a mailing list.
+    </p>
+  </div>
+</section>
+
+<section class="doc">
+  <div class="wrap">
+    <h2>Contact</h2>
+    <p>Questions about any of this: <a href="mailto:EMAIL-HERE">EMAIL-HERE</a>.</p>
+    <p class="note">
+      This describes how Hush actually behaves, and every claim above is
+      verifiable in the software rather than being a promise about intent. It is
+      written plainly rather than in legal language, and it is <b>not legal
+      advice</b> &mdash; if you need a policy that satisfies a specific regulator,
+      that is a question for a solicitor.
+    </p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© <span id="yr">2026</span> Xtravalake</span>
+    <span class="spacer"></span>
+    <a href="index.html">Hush</a>
+    <a href="terms.html">Terms</a>
+    <a href="mailto:EMAIL-HERE">Contact</a>
+  </div>
+</footer>
+
+<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+
 </body>
 </html>
