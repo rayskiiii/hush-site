@@ -11,13 +11,26 @@
    legal page that breaks when a stylesheet moves is worse than a repeated
    block. */
 :root {
-  --bg:      #141414;
-  --panel:   #1d1d1d;
-  --line:    #2e2e2e;
-  --ink:     #ebebeb;
-  --muted:   #9a9a9a;
+  --bg:      #0c0c0e;
+  --panel:   #17171b;
+  --line:    #27272d;
+  --ink:     #f2f2f4;
+  --muted:   #9a9aa4;
   --live:    #7cb342;
-  --radius:  10px;
+  --neon:    #a3e635;
+  --hot:     #ff2e7e;
+  --radius:  12px;
+}
+
+
+/* The same two glows as the front page, so a legal page still feels like the
+   same site rather than a plain document someone forgot to style. */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(56vw 40vw at 10% -8%, rgba(163,230,53,.10), transparent 62%),
+    radial-gradient(50vw 38vw at 94% 10%, rgba(255,46,126,.08), transparent 60%);
 }
 
 * { box-sizing: border-box; }
@@ -35,7 +48,7 @@ a { color: inherit; }
 nav {
   border-bottom: 1px solid var(--line);
   position: sticky; top: 0; z-index: 10;
-  background: rgba(20,20,20,.9);
+  background: rgba(12,12,14,.82);
   backdrop-filter: blur(8px);
 }
 nav .wrap { display: flex; align-items: center; gap: 28px; height: 62px; }
@@ -63,7 +76,7 @@ li { margin-bottom: 9px; }
 .headline {
   background: var(--panel);
   border: 1px solid #3b5426;
-  border-left: 3px solid var(--live);
+  border-left: 3px solid var(--neon);
   border-radius: var(--radius);
   padding: 20px 22px;
   max-width: 44em;

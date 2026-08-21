@@ -20,20 +20,40 @@
    Hush running should recognise the thing they are buying.
 --------------------------------------------------------------------------- */
 :root {
-  --bg:      #141414;
-  --panel:   #1d1d1d;
-  --line:    #2e2e2e;
-  --ink:     #ebebeb;
-  --muted:   #9a9a9a;
+  --bg:      #0c0c0e;   /* a touch cooler and darker, so glows read */
+  --panel:   #17171b;
+  --line:    #27272d;
+  --ink:     #f2f2f4;
+  --muted:   #9a9aa4;
   --live:    #7cb342;   /* the green of an enabled clip */
-  --muteclip:#2f4420;   /* a muted one */
+  --neon:    #a3e635;   /* the lit version, for edges and glows */
+  --muteclip:#2f4420;
   --accent:  #4a9eff;
-  --radius:  10px;
+  --hot:     #ff2e7e;   /* discounts and savings - the one warm colour */
+  --hot-dim: #b3175a;
+  --radius:  12px;
 }
 
 * { box-sizing: border-box; }
 
 html { scroll-behavior: smooth; }
+
+/*
+ * Two soft glows behind everything, fixed so they do not scroll away.
+ * Painted on ::before rather than as a body background-image so the page
+ * background stays a flat colour for anything that cannot render gradients.
+ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(58vw 42vw at 12% -6%,  rgba(163,230,53,.13), transparent 62%),
+    radial-gradient(52vw 40vw at 92% 14%,  rgba(255,46,126,.11), transparent 60%),
+    radial-gradient(46vw 36vw at 50% 108%, rgba(74,158,255,.07), transparent 62%);
+}
 
 body {
   margin: 0;
@@ -51,7 +71,7 @@ a { color: inherit; }
 nav {
   border-bottom: 1px solid var(--line);
   position: sticky; top: 0; z-index: 10;
-  background: rgba(20,20,20,.9);
+  background: rgba(12,12,14,.82);
   backdrop-filter: blur(8px);
 }
 nav .wrap { display: flex; align-items: center; gap: 28px; height: 62px; }
@@ -186,6 +206,130 @@ section p.lede { color: var(--muted); max-width: 40em; margin: 0 0 30px; }
 .stat span { font-size: 13px; color: var(--muted); }
 
 
+
+
+/* -------------------------------------------------------- neon accents */
+/*
+ * One warm colour, used only for money: discounts, savings, the annual badge.
+ * Keeping it to that means a pink pill always means the same thing, instead of
+ * becoming decoration people stop reading.
+ */
+.pill {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--hot), #ff6aa8);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  padding: 3px 10px;
+  border-radius: 100px;
+  vertical-align: middle;
+  box-shadow: 0 0 18px rgba(255,46,126,.35);
+}
+.pill.quiet {
+  background: rgba(255,46,126,.12);
+  color: #ff87b7;
+  box-shadow: none;
+  border: 1px solid rgba(255,46,126,.3);
+}
+
+/* The headline picks up the same two colours the page is lit with. */
+h1 .grad {
+  background: linear-gradient(100deg, var(--neon) 8%, #eaffc4 42%, #ffa8cd 78%, var(--hot) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.btn.glow {
+  background: linear-gradient(135deg, var(--neon), var(--live));
+  border-color: transparent;
+  color: #0f1a05;
+  box-shadow: 0 0 28px rgba(163,230,53,.28);
+}
+.btn.glow:hover { box-shadow: 0 0 38px rgba(163,230,53,.42); opacity: 1; }
+
+/* A hairline gradient edge, drawn as a border-box mask so the panel keeps
+   its own background. Falls back to the plain --line border everywhere the
+   mask is unsupported. */
+.demo, .price-card {
+  position: relative;
+}
+.price-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(140deg, rgba(163,230,53,.55), rgba(255,46,126,.45) 70%, transparent);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+}
+
+
+/* ------------------------------------------------------------- pricing */
+.pay-toggle {
+  display: flex; align-items: center; justify-content: center;
+  gap: 12px; margin: 0 0 24px; font-size: 14.5px; color: var(--muted);
+  flex-wrap: wrap;
+}
+.pay-toggle .on { color: var(--ink); font-weight: 600; }
+.switch {
+  width: 50px; height: 28px; border-radius: 100px;
+  background: #2c2c33; border: 1px solid var(--line);
+  position: relative; cursor: pointer; padding: 0;
+  transition: background .2s ease;
+}
+.switch[aria-checked="true"] {
+  background: linear-gradient(135deg, var(--neon), var(--live));
+  border-color: transparent;
+  box-shadow: 0 0 16px rgba(163,230,53,.3);
+}
+.switch i {
+  position: absolute; top: 3px; left: 3px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #fff; transition: transform .2s cubic-bezier(.4,1.4,.5,1);
+}
+.switch[aria-checked="true"] i { transform: translateX(22px); }
+
+.price-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 30px 28px;
+  text-align: center;
+  margin-bottom: 26px;
+}
+.price-main {
+  display: flex; align-items: baseline; justify-content: center;
+  gap: 10px; flex-wrap: wrap;
+}
+.price-was {
+  font-size: 26px; color: var(--muted); font-weight: 600;
+  text-decoration: line-through;
+  text-decoration-color: var(--hot);
+  text-decoration-thickness: 2px;
+}
+.price-now { font-size: 46px; font-weight: 700; letter-spacing: -.03em; }
+.price-per { font-size: 17px; color: var(--muted); }
+.price-sub { font-size: 13.5px; color: var(--muted); margin: 8px 0 22px; }
+.price-save { font-size: 13.5px; color: #ff87b7; margin: 14px 0 0; min-height: 1.4em; }
+
+.includes {
+  list-style: none; padding: 0; margin: 24px 0 0;
+  text-align: left; display: inline-block;
+}
+.includes li { padding-left: 26px; position: relative; color: var(--muted); margin-bottom: 9px; }
+.includes li:last-child { margin-bottom: 0; }
+.includes li::before {
+  content: "\2713"; position: absolute; left: 0; color: var(--neon); font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .switch i { transition: none; }
+}
 
 /* ------------------------------------------------------ arrival diagram */
 .dist { width: 100%; height: auto; display: block; }
@@ -396,9 +540,9 @@ footer .spacer { margin-left: auto; }
 
 <header class="hero">
   <div class="wrap">
-    <span class="badge"><b>Pr</b> Premiere Pro</span>
+    <span class="badge"><b>Pr</b> Premiere Pro <span class="pill quiet">macOS</span></span>
 
-    <h1>Hours of multi-mic audio,<br>cut in a minute.</h1>
+    <h1>Hours of multi-mic audio,<br><span class="grad">cut in a minute.</span></h1>
 
     <p class="tagline">
       Podcasts, interviews, panels, roundtables &mdash; anything where several
@@ -412,7 +556,7 @@ footer .spacer { margin-left: auto; }
     <div class="buy">
       <!-- Replace with your store's checkout link. Lemon Squeezy and Paddle
            both give you a URL; nothing else on this page needs to change. -->
-      <a class="btn" href="BUY-LINK-HERE" id="buyBtn">Get Hush</a>
+      <a class="btn glow" href="BUY-LINK-HERE" id="buyBtn">Get Hush</a>
       <a class="btn ghost" href="#try">Try it free</a>
       <span class="price">The free version runs on the first 5 minutes of any sequence.</span>
     </div>
@@ -745,11 +889,32 @@ footer .spacer { margin-left: auto; }
       length.
     </p>
 
-    <div class="stat-grid" style="margin-bottom:26px">
-      <!-- PRICE-HERE - $19/month is a placeholder, not a recommendation. -->
-      <div class="stat"><b>$19<span style="font-size:15px;color:var(--muted);font-weight:400"> /mo</span></b><span>cancel any time &middot; tax included</span></div>
-      <div class="stat"><b>1</b><span>machine per licence, movable</span></div>
-      <div class="stat"><b>5 min</b><span>free on any sequence, forever</span></div>
+    <div class="pay-toggle">
+      <span id="labMonthly">Monthly</span>
+      <button class="switch" id="billToggle" role="switch" aria-checked="true"
+              aria-label="Switch between monthly and annual billing"><i></i></button>
+      <span id="labAnnual" class="on">Annual</span>
+      <span class="pill">SAVE 20%</span>
+    </div>
+
+    <div class="price-card">
+      <div class="price-main">
+        <span class="price-was" id="priceWas">$228</span>
+        <span class="price-now" id="priceNow">$182</span>
+        <span class="price-per" id="pricePer">/year</span>
+      </div>
+      <p class="price-sub" id="priceSub">Billed yearly &middot; works out at $15.17/month</p>
+
+      <a class="btn glow" href="BUY-LINK-HERE" id="priceBuy">Get Hush</a>
+
+      <p class="price-save" id="priceSave">Save $46 compared to monthly</p>
+
+      <ul class="includes">
+        <li>Unlimited sequences, unlimited length</li>
+        <li>One machine, movable whenever you like</li>
+        <li>Every update while subscribed</li>
+        <li>Cancel any time &middot; VAT and sales tax included</li>
+      </ul>
     </div>
     <div class="buy">
       <a class="btn ghost" href="BUY-LINK-HERE" id="demoBtn">Download the free version</a>
@@ -1204,6 +1369,69 @@ function waveform(seed, segments, duration) {
   }, { threshold: 0.35 });
 
   [].forEach.call(targets, function (t) { io.observe(t); });
+})();
+</script>
+
+<script>
+/* ---------------------------------------------------------------------------
+   Monthly / annual billing toggle.
+
+   🔴 Both figures come from MONTHLY and DISCOUNT below. Typing the annual
+   price separately is how a page ends up advertising a saving that does not
+   match its own arithmetic - and the customer who spots it is the one who was
+   about to pay.
+--------------------------------------------------------------------------- */
+(function () {
+  var MONTHLY  = 19;      /* PRICE-HERE - change this one number */
+  var DISCOUNT = 0.20;    /* annual discount, 0.20 = 20% off */
+
+  var sw = document.getElementById('billToggle');
+  if (!sw) return;
+
+  var fullYear = MONTHLY * 12;
+  var year     = Math.round(fullYear * (1 - DISCOUNT));
+  var saving   = fullYear - year;
+
+  function money(n) {
+    // Whole pounds/dollars where possible; editors do not need the pennies.
+    return '$' + (n % 1 === 0 ? n : n.toFixed(2));
+  }
+
+  function render(annual) {
+    sw.setAttribute('aria-checked', String(annual));
+    document.getElementById('labAnnual').className  = annual ? 'on' : '';
+    document.getElementById('labMonthly').className = annual ? '' : 'on';
+
+    var was  = document.getElementById('priceWas');
+    var now  = document.getElementById('priceNow');
+    var per  = document.getElementById('pricePer');
+    var sub  = document.getElementById('priceSub');
+    var save = document.getElementById('priceSave');
+
+    if (annual) {
+      was.textContent  = money(fullYear);
+      was.style.display = '';
+      now.textContent  = money(year);
+      per.textContent  = '/year';
+      sub.textContent  = 'Billed yearly \u00b7 works out at ' +
+                         money(+(year / 12).toFixed(2)) + '/month';
+      save.textContent = 'Save ' + money(saving) + ' compared to monthly';
+    } else {
+      was.style.display = 'none';
+      now.textContent  = money(MONTHLY);
+      per.textContent  = '/month';
+      sub.textContent  = 'Billed monthly \u00b7 cancel any time';
+      save.textContent = 'Switch to annual and save ' + money(saving) + ' a year';
+    }
+  }
+
+  sw.addEventListener('click', function () {
+    render(sw.getAttribute('aria-checked') !== 'true');
+  });
+
+  // Annual first: it is the better deal, and showing it first is the whole
+  // point of the toggle.
+  render(true);
 })();
 </script>
 
