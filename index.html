@@ -30,6 +30,12 @@
   --muteclip:#2f4420;
   --accent:  #4a9eff;
   --hot:     #ff2e7e;   /* discounts and savings - the one warm colour */
+  /* Premiere's audio colours: a green clip body with the waveform drawn dark
+     ON TOP of it. Not quite black, so it reads as a graphic rather than a
+     screenshot, but dark enough to actually see. */
+  --clip-live: #7cb342;
+  --clip-mute: #26341a;
+  --wave-ink:  #0e1a06;
   --hot-dim: #b3175a;
   --radius:  12px;
 }
@@ -75,11 +81,38 @@ nav {
   backdrop-filter: blur(8px);
 }
 nav .wrap { display: flex; align-items: center; gap: 28px; height: 62px; }
-.brand { display: flex; align-items: center; gap: 9px; font-weight: 650; letter-spacing: -.01em; }
-.brand svg { display: block; }
-nav a.link { color: var(--muted); text-decoration: none; font-size: 14.5px; }
+.brand {
+  display: flex; align-items: center; gap: 9px;
+  font-weight: 650; letter-spacing: -.01em;
+  white-space: nowrap; flex: none;
+}
+.brand svg { display: block; flex: none; }
+/*
+ * 🔴 nowrap is the whole fix. Without it "How it works" broke over three lines
+ * on a phone and shoved the row to ~180px tall, pushing the page content under
+ * a nav that is sticky. Links now stay on one line and the row scrolls
+ * sideways instead, which costs nothing on a desktop and keeps every link
+ * reachable on a phone.
+ */
+nav a.link {
+  color: var(--muted); text-decoration: none; font-size: 14.5px;
+  white-space: nowrap; flex: none;
+}
 nav a.link:hover { color: var(--ink); }
 nav .spacer { margin-left: auto; }
+
+@media (max-width: 720px) {
+  nav .wrap {
+    gap: 18px;
+    overflow-x: auto;
+    scrollbar-width: none;            /* Firefox */
+    -webkit-overflow-scrolling: touch;
+  }
+  nav .wrap::-webkit-scrollbar { display: none; }
+  nav .spacer { display: none; }      /* let the links follow the name */
+  nav a.link { font-size: 13.5px; }
+  .wrap { padding: 0 18px; }
+}
 
 /* ------------------------------------------------------------------ hero */
 header.hero { padding: 72px 0 44px; }
@@ -139,7 +172,7 @@ section p.lede { color: var(--muted); max-width: 40em; margin: 0 0 30px; }
 }
 .tl-track {
   flex: 1; height: 30px; border-radius: 4px;
-  background: #22301a;
+  background: var(--clip-mute);
   position: relative; overflow: hidden;
 }
 
@@ -152,16 +185,30 @@ section p.lede { color: var(--muted); max-width: 40em; margin: 0 0 30px; }
  * clip over the same waveform, and the only difference between live and muted
  * is brightness. Which is exactly the difference in Premiere.
  */
-.tl-track > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.tl-track > svg path { fill: #9ccc65; opacity: .55; }
+/*
+ * 🔴 The waveform sits ON TOP of the clips, not behind them.
+ *
+ * Underneath, it was a light green shape covered by a 62%-opaque green clip,
+ * which averaged the two together - about 73 units of total channel difference
+ * between "waveform here" and "bare track", which is why it read as flat. On
+ * top and dark, it works the way Premiere's does: the clip is the green body,
+ * the waveform is the dark shape cut into it.
+ */
+.tl-track > svg {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  z-index: 2; pointer-events: none;
+}
+.tl-track > svg path { fill: var(--wave-ink); opacity: .68; }
 
 .tl-clip {
-  position: absolute; top: 0; bottom: 0;
+  position: absolute; top: 0; bottom: 0; z-index: 1;
   border-left: 1px solid rgba(0,0,0,.5);
   border-right: 1px solid rgba(0,0,0,.5);
-  background: rgba(124,179,66,.62);
+  background: var(--clip-live);
 }
-.tl-clip.off { background: rgba(18,26,12,.72); }
+/* Muted stays a dark olive rather than near-black, so the waveform is still
+   faintly readable - a disabled clip in Premiere does not go blank either. */
+.tl-clip.off { background: var(--clip-mute); }
 
 /* Taller on a desktop, where there is room for it to be read. */
 @media (min-width: 900px) {
@@ -177,9 +224,9 @@ section p.lede { color: var(--muted); max-width: 40em; margin: 0 0 30px; }
 }
 @keyframes cut {
   /* uncut: every clip live, the state the user starts in */
-  0%, 14%   { background: rgba(124,179,66,.62); }
-  26%, 88%  { background: rgba(18,26,12,.72); }
-  100%      { background: rgba(124,179,66,.62); }
+  0%, 14%   { background: var(--clip-live); }
+  26%, 88%  { background: var(--clip-mute); }
+  100%      { background: var(--clip-live); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -279,16 +326,33 @@ h1 .grad {
  */
 .fan svg .spark { fill: var(--neon); }
 
-.fan .out .strip i {
-  background: #3f5a28;
-  transition: none;
+/*
+ * The order matters more than the motion.
+ *
+ * Before, the clips arrived already cut, which said Hush receives pre-chopped
+ * audio. It does not - it receives a continuous recording and does the cutting.
+ * So the pulse now lands, the whole strip fills green (the untouched channel),
+ * and only then does it resolve into clips. The uncut moment is the audio as
+ * the recorder made it; the cut that follows is the product.
+ */
+.fan .out .strip { position: relative; }
+.fan .out .strip i { background: #3f5a28; }
+.fan .out .strip .full {
+  position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+  width: auto; background: var(--live); opacity: 0;
 }
-.fan.lit .out .strip i {
-  animation: chLight 2.8s ease-in-out infinite;
+
+.fan.lit .out .strip .full { animation: chFull 3.4s ease-in-out infinite; }
+.fan.lit .out .strip i     { animation: chLight 3.4s ease-in-out infinite; }
+
+@keyframes chFull {          /* the channel arriving whole */
+  0%, 20%   { opacity: 0; }
+  30%, 48%  { opacity: 1; }
+  60%, 100% { opacity: 0; }
 }
-@keyframes chLight {
-  0%, 22%   { background: #3f5a28; }
-  38%, 78%  { background: var(--live); }
+@keyframes chLight {         /* and then only the speech surviving */
+  0%, 46%   { background: #3f5a28; }
+  58%, 88%  { background: var(--live); }
   100%      { background: #3f5a28; }
 }
 
@@ -304,7 +368,20 @@ h1 .grad {
   position: absolute; top: 0; bottom: 0; width: 2px;
   background: var(--neon); opacity: .9; border-radius: 2px;
 }
-.in .bar-fill.meter { animation: meter 2.4s ease-in-out infinite; }
+/*
+ * 🔴 Grow once, then meter - as two animations, not a transition plus an
+ * animation. The reveal used to be a CSS transition on transform while the
+ * meter animated the same property; animations always win, so the bar snapped
+ * to metering and the grow-from-nothing was never seen.
+ */
+.in .bar-fill.meter {
+  animation: grow .9s cubic-bezier(.22,.61,.36,1) forwards,
+             meter 2.4s ease-in-out .9s infinite;
+}
+@keyframes grow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(.80); }
+}
 @keyframes meter {
   0%   { transform: scaleX(.80); }
   14%  { transform: scaleX(.97); }
@@ -315,12 +392,14 @@ h1 .grad {
   82%  { transform: scaleX(.83); }
   100% { transform: scaleX(.80); }
 }
-.bar-row:nth-child(2) .bar-fill.meter { animation-delay: -.7s; }
-.bar-row:nth-child(3) .bar-fill.meter { animation-delay: -1.4s; }
+.bar-row:nth-child(2) .bar-fill.meter { animation-delay: 0s, 1.6s; }
+.bar-row:nth-child(3) .bar-fill.meter { animation-delay: 0s, 2.3s; }
 
 @media (prefers-reduced-motion: reduce) {
   .fan.lit .out .strip i { animation: none; background: var(--live); }
+  .fan.lit .out .strip .full { animation: none; opacity: 0; }
   .in .bar-fill.meter { animation: none; transform: scaleX(1); }
+  .in .cmp-fill { transform: scaleX(1); }
 }
 
 
@@ -1380,10 +1459,14 @@ function waveform(seed, segments, duration) {
      */
     var pxIn  = Math.max(1, Math.min(28, sh.inMs  / 4));
     var pxOut = Math.max(1, Math.min(28, sh.outMs / 4));
-    var lit = 'rgba(124,179,66,.62)';
+    // Same two colours as the CSS, read from it rather than retyped, so the
+    // playground cannot end up a different green from the hero timeline.
+    var css  = getComputedStyle(document.documentElement);
+    var lit  = css.getPropertyValue('--clip-live').trim() || '#7cb342';
+    var dim  = css.getPropertyValue('--clip-mute').trim() || '#26341a';
     el.style.background =
-      'linear-gradient(to right, rgba(18,26,12,.72) 0, ' + lit + ' ' + pxIn + 'px,' +
-      ' ' + lit + ' calc(100% - ' + pxOut + 'px), rgba(18,26,12,.72) 100%)';
+      'linear-gradient(to right, ' + dim + ' 0, ' + lit + ' ' + pxIn + 'px,' +
+      ' ' + lit + ' calc(100% - ' + pxOut + 'px), ' + dim + ' 100%)';
     return el;
   }
 
@@ -1437,6 +1520,13 @@ function waveform(seed, segments, duration) {
 
     var strip = document.createElement('span');
     strip.className = 'strip';
+
+    // Sits behind the clips and covers the whole channel: the recording as it
+    // arrived, before Hush touched it.
+    var full = document.createElement('i');
+    full.className = 'full';
+    strip.appendChild(full);
+
     c[1].forEach(function (s) {
       var b = document.createElement('i');
       b.style.left = s[0] + '%';
@@ -1479,7 +1569,7 @@ function waveform(seed, segments, duration) {
     spark.setAttribute('rx', '0.5');
 
     var move = document.createElementNS(NS, 'animateMotion');
-    move.setAttribute('dur', '2.8s');
+    move.setAttribute('dur', '3.4s');
     move.setAttribute('repeatCount', 'indefinite');
     move.setAttribute('begin', (i * 0.1) + 's');
     move.setAttribute('calcMode', 'spline');
@@ -1497,11 +1587,12 @@ function waveform(seed, segments, duration) {
     // reappear at the start with a visible jump.
     var fade = document.createElementNS(NS, 'animate');
     fade.setAttribute('attributeName', 'opacity');
-    fade.setAttribute('dur', '2.8s');
+    fade.setAttribute('dur', '3.4s');
     fade.setAttribute('repeatCount', 'indefinite');
     fade.setAttribute('begin', (i * 0.1) + 's');
-    fade.setAttribute('values', '0;1;1;0');
-    fade.setAttribute('keyTimes', '0;0.12;0.72;1');
+    fade.setAttribute('values', '0;1;1;0');   /* lands as the channel fills */
+    fade.setAttribute('keyTimes', '0;0.10;0.30;0.42');
+    fade.setAttribute('fill', 'freeze');
     spark.appendChild(fade);
 
     svg.appendChild(spark);
