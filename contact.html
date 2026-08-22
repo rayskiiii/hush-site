@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact — Hush</title>
+<meta name="description" content="Get in touch about Hush, the multi-microphone audio extension for Adobe Premiere Pro.">
+<meta name="robots" content="index,follow">
+
+<style>
+/* Same palette and furniture as the rest of the site. Duplicated deliberately:
+   a page people reach when something is already wrong should not depend on a
+   stylesheet loading from somewhere else. */
+:root {
+  --bg:      #0c0c0e;
+  --panel:   #17171b;
+  --line:    #27272d;
+  --ink:     #f2f2f4;
+  --muted:   #9a9aa4;
+  --live:    #7cb342;
+  --neon:    #a3e635;
+  --hot:     #ff2e7e;
+  --radius:  12px;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(56vw 40vw at 10% -8%, rgba(163,230,53,.10), transparent 62%),
+    radial-gradient(50vw 38vw at 94% 10%, rgba(255,46,126,.08), transparent 60%);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+a { color: inherit; }
+
+nav {
+  border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(12,12,14,.82);
+  backdrop-filter: blur(8px);
+}
+nav .wrap { display: flex; align-items: center; gap: 28px; height: 62px; }
+.brand {
+  display: flex; align-items: center; gap: 9px;
+  font-weight: 650; letter-spacing: -.01em; text-decoration: none;
+  white-space: nowrap; flex: none;
+}
+.brand svg { display: block; flex: none; }
+nav a.link {
+  color: var(--muted); text-decoration: none; font-size: 14.5px;
+  white-space: nowrap; flex: none;
+}
+nav a.link:hover { color: var(--ink); }
+nav .spacer { margin-left: auto; }
+@media (max-width: 720px) {
+  nav .wrap { gap: 18px; overflow-x: auto; scrollbar-width: none; }
+  nav .wrap::-webkit-scrollbar { display: none; }
+  nav .spacer { display: none; }
+  nav a.link { font-size: 13.5px; }
+  .wrap { padding: 0 18px; }
+}
+
+header.doc { padding: 60px 0 30px; }
+h1 { font-size: clamp(32px, 5vw, 42px); letter-spacing: -.03em; margin: 0 0 10px; line-height: 1.08; }
+.lede { color: var(--muted); font-size: 18px; margin: 0; max-width: 40em; }
+
+main { padding-bottom: 30px; }
+section.doc { padding: 30px 0; border-top: 1px solid var(--line); }
+h2 { font-size: 20px; letter-spacing: -.015em; margin: 0 0 12px; }
+p { color: var(--muted); margin: 0 0 15px; max-width: 44em; }
+p:last-child { margin-bottom: 0; }
+b, strong { color: var(--ink); font-weight: 600; }
+ul { color: var(--muted); max-width: 44em; padding-left: 22px; margin: 0 0 15px; }
+li { margin-bottom: 10px; }
+
+/*
+ * The address is the point of the page, so it is large, selectable text as
+ * well as a link. A mailto: alone depends on the reader having a mail app
+ * configured - plenty of people live in a webmail tab and get nothing at all
+ * when they click one.
+ */
+.addr {
+  background:
+    radial-gradient(115% 85% at 12% 0%,   rgba(163,230,53,.13), transparent 58%),
+    radial-gradient(105% 85% at 92% 104%, rgba(255,46,126,.12), transparent 60%),
+    var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 28px 26px;
+  max-width: 44em;
+  text-align: center;
+}
+.addr a {
+  font-size: clamp(19px, 3.4vw, 27px);
+  font-weight: 650;
+  letter-spacing: -.02em;
+  color: var(--ink);
+  text-decoration: none;
+  word-break: break-all;
+}
+.addr a:hover { color: var(--neon); }
+.addr .hint { font-size: 13.5px; color: var(--muted); margin: 12px 0 0; }
+
+.note {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  font-size: 14px;
+  color: var(--muted);
+  max-width: 44em;
+}
+.note b { color: var(--ink); }
+
+footer {
+  border-top: 1px solid var(--line);
+  padding: 34px 0 60px; color: var(--muted); font-size: 13.5px;
+}
+footer .wrap { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
+footer a { color: var(--muted); }
+footer .spacer { margin-left: auto; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <svg width="30" height="14" viewBox="0 0 44 20" aria-hidden="true">
+        <path d="M2 10 L5 10 L7 4 L9 16 L11 7 L13 13 L15 10 L18 10"
+              fill="none" stroke="#7cb342" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M26 10 L29 10 L31 5 L33 15 L35 8 L37 12 L39 10 L42 10"
+              fill="none" stroke="#7cb342" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Hush
+    </a>
+    <span class="spacer"></span>
+    <a class="link" href="index.html#how">How it works</a>
+    <a class="link" href="index.html#try">Pricing</a>
+    <a class="link" href="index.html#faq">FAQ</a>
+  </div>
+</nav>
+
+<header class="doc">
+  <div class="wrap">
+    <h1>Contact</h1>
+    <p class="lede">
+      Support goes to a person, not a queue. One email address, read by the
+      developer.
+    </p>
+  </div>
+</header>
+
+<main>
+<section class="doc">
+  <div class="wrap">
+    <div class="addr">
+      <a href="mailto:hushextension@gmail.com">hushextension@gmail.com</a>
+      <p class="hint">Click to open your mail app, or copy the address.</p>
+    </div>
+  </div>
+</section>
+
+<section class="doc">
+  <div class="wrap">
+    <h2>If something has gone wrong with a run</h2>
+    <p>
+      There is a button in the panel that makes this quick. Open Hush, expand
+      <b>Advanced</b>, and press <b>Export Analysis</b>. It saves one JSON file
+      to your Desktop containing the levels, the decisions Hush made and the
+      full activity log from the last run.
+    </p>
+    <p>
+      Attach that file and I can usually see what happened without a single
+      follow&#8209;up question. <b>It contains no audio</b> &mdash; only
+      measurements &mdash; so you are not sending me your recording.
+    </p>
+    <p>It also helps to say:</p>
+    <ul>
+      <li>which version of Premiere, and which macOS</li>
+      <li>how the audio was recorded &mdash; one multichannel file, or separate
+          files per microphone, and whether the recorders started together</li>
+      <li>what you expected to happen, and what happened instead</li>
+    </ul>
+  </div>
+</section>
+
+<section class="doc">
+  <div class="wrap">
+    <h2>Licences, billing and refunds</h2>
+    <p>
+      Refunds are <b>fourteen days, no questions asked</b> &mdash; email the
+      address above and it will be refunded and cancelled. See the
+      <a href="terms.html">terms</a> for the detail.
+    </p>
+    <p>
+      If a licence key will not activate, send the key and the exact wording of
+      the message the panel showed. Payments are handled by Lemon Squeezy as
+      merchant of record, so your card statement will read <b>LEMSQZY*</b>
+      rather than Lake Media Ltd &mdash; that charge is Hush.
+    </p>
+  </div>
+</section>
+
+<section class="doc">
+  <div class="wrap">
+    <h2>Before you write about the preview looking darker</h2>
+    <p>
+      This one comes up often enough to answer here. The rebuilt sequence can
+      preview darker than your original, because Premiere's XML importer leaves
+      its Color Setup on &ldquo;Custom&rdquo;. Fix it in Sequence Settings
+      &rarr; Color Management &rarr; Color Setup, set to match the original,
+      usually &ldquo;Direct Rec. 709 (SDR)&rdquo;.
+    </p>
+    <p><b>Your export is not affected</b> &mdash; only the preview.</p>
+  </div>
+</section>
+
+<section class="doc">
+  <div class="wrap">
+    <h2>Feature requests and awkward recordings</h2>
+    <p>
+      Both welcome. Hush has been tuned against real hand&#8209;labelled sessions
+      rather than synthetic tests, and the hard cases came from actual
+      recordings that did not work. If you have a session it handles badly, that
+      is genuinely useful to hear about.
+    </p>
+    <p class="note">
+      Hush is made by one person alongside other work, so replies are not
+      instant &mdash; but every email is read and answered.
+    </p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© <span id="yr">2026</span> Lake Media Ltd</span>
+    <span class="spacer"></span>
+    <a href="index.html">Hush</a>
+    <a href="terms.html">Terms</a>
+    <a href="privacy.html">Privacy</a>
+  </div>
+</footer>
+
+<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+
+</body>
+</html>
