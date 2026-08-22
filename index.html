@@ -833,6 +833,7 @@ footer .spacer { margin-left: auto; }
     <a class="link" href="#watch">Watch</a>
     <a class="link" href="#try">Pricing</a>
     <a class="link" href="#faq">FAQ</a>
+    <a class="link" href="contact.html">Contact</a>
     <a class="link" href="mailto:hushextension@gmail.com">Contact</a>
   </div>
 </nav>
@@ -1344,7 +1345,7 @@ footer .spacer { margin-left: auto; }
     <span class="spacer"></span>
     <a href="terms.html">Terms</a>
     <a href="privacy.html">Privacy</a>
-    <a href="mailto:hushextension@gmail.com">Contact</a>
+    <a href="contact.html">Contact</a>
   </div>
   <div class="wrap" style="margin-top:16px; display:block">
     <p style="margin:0 0 8px; font-size:12.5px; max-width:52em">
@@ -1866,6 +1867,33 @@ function waveform(seed, segments, duration) {
   var MONTHLY     = 19;
   var MONTHS_FREE = 2;           /* annual = (12 - this) months */
 
+  /*
+   * BUY-LINK-HERE - one checkout URL per variant.
+   *
+   * Lemon Squeezy gives a separate URL to each variant, so the button has to
+   * follow the toggle. Sending someone who chose Annual to the monthly
+   * checkout is the kind of mistake nobody reports - they just pay monthly and
+   * quietly wonder why it cost more.
+   *
+   * Left empty until the product is published: the button then falls back to
+   * the pricing section rather than opening a dead link.
+   */
+  var BUY = {
+    monthly: 'https://gethush.lemonsqueezy.com/checkout/buy/be07f010-bba5-4aa5-a59c-260f18ba5f86',
+    annual:  'https://gethush.lemonsqueezy.com/checkout/buy/be07f010-bba5-4aa5-a59c-260f18ba5f86'
+  };
+
+  /*
+   * Both point at the same product checkout, which lists BOTH variants with
+   * their prices and lets the buyer choose. That is deliberate for now: a
+   * shared link cannot send someone to the wrong plan, because they pick on
+   * the page.
+   *
+   * If per-variant links become available, split these two - the toggle
+   * already sends each to its own URL. Until then the checkout defaults to
+   * annual, so a monthly buyer has one radio button to click.
+   */
+
   var sw = document.getElementById('billToggle');
   if (!sw) return;
 
@@ -1895,6 +1923,13 @@ function waveform(seed, segments, duration) {
 
   function render(annual) {
     sw.setAttribute('aria-checked', String(annual));
+
+    // Point every Buy button at the variant currently on screen.
+    var href = (annual ? BUY.annual : BUY.monthly) || '#try';
+    ['buyBtn', 'priceBuy', 'demoBtn'].forEach(function (id) {
+      var a = document.getElementById(id);
+      if (a) a.setAttribute('href', href);
+    });
     document.getElementById('labAnnual').className  = annual ? 'on' : '';
     document.getElementById('labMonthly').className = annual ? '' : 'on';
 
