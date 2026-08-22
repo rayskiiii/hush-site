@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Download and install — Hush</title>
+<meta name="description" content="Download Hush for Premiere Pro and install it. Free mode runs the full detection on the first five minutes of your own audio.">
+<meta name="robots" content="index,follow">
+
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+<style>
+/* Same palette and furniture as the front page. Duplicated deliberately: a page
+   that breaks when a stylesheet moves is worse than a repeated block. */
+:root {
+  --bg:      #0c0c0e;
+  --panel:   #17171b;
+  --line:    #27272d;
+  --ink:     #f2f2f4;
+  --muted:   #9a9aa4;
+  --live:    #7cb342;
+  --neon:    #a3e635;
+  --hot:     #ff2e7e;
+  --radius:  12px;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(56vw 40vw at 10% -8%, rgba(163,230,53,.10), transparent 62%),
+    radial-gradient(50vw 38vw at 94% 10%, rgba(255,46,126,.08), transparent 60%);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+a { color: inherit; }
+
+nav {
+  border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(12,12,14,.82);
+  backdrop-filter: blur(8px);
+}
+nav .wrap { display: flex; align-items: center; gap: 28px; height: 62px; }
+.brand { display: flex; align-items: center; gap: 9px; font-weight: 650; letter-spacing: -.01em; text-decoration: none; white-space: nowrap; }
+.brand svg { display: block; }
+nav a.link { color: var(--muted); text-decoration: none; font-size: 14.5px; white-space: nowrap; }
+nav a.link:hover { color: var(--ink); }
+nav .spacer { margin-left: auto; }
+
+header.doc { padding: 60px 0 30px; }
+h1 { font-size: clamp(32px, 5vw, 42px); letter-spacing: -.03em; margin: 0 0 10px; line-height: 1.08; }
+.sub { color: var(--muted); font-size: 17px; margin: 0; max-width: 40em; }
+
+main { padding-bottom: 30px; }
+section.doc { padding: 26px 0; border-top: 1px solid var(--line); }
+h2 { font-size: 20px; letter-spacing: -.015em; margin: 0 0 12px; }
+p { color: var(--muted); margin: 0 0 15px; max-width: 44em; }
+p:last-child { margin-bottom: 0; }
+b, strong { color: var(--ink); font-weight: 600; }
+ul { color: var(--muted); max-width: 44em; padding-left: 22px; margin: 0 0 15px; }
+li { margin-bottom: 9px; }
+code {
+  background: #101014; border: 1px solid var(--line); border-radius: 5px;
+  padding: 1px 6px; font-size: 13.5px; color: var(--ink);
+}
+
+/* ---- the download itself ---- */
+.get {
+  background: var(--panel);
+  border: 1px solid #3b5426;
+  border-radius: var(--radius);
+  padding: 26px;
+  max-width: 44em;
+}
+.dl {
+  display: inline-block;
+  background: var(--neon); color: #10210a;
+  font-weight: 650; font-size: 16px;
+  text-decoration: none;
+  padding: 13px 26px; border-radius: 10px;
+  transition: background .15s ease, transform .15s ease;
+}
+.dl:hover { background: #b6f04a; transform: translateY(-1px); }
+.meta { color: var(--muted); font-size: 13.5px; margin: 12px 0 0; }
+
+/* ---- numbered steps ---- */
+ol.steps { counter-reset: s; list-style: none; padding: 0; margin: 0; max-width: 44em; }
+ol.steps > li {
+  counter-increment: s;
+  position: relative;
+  padding: 0 0 20px 46px;
+  color: var(--muted);
+}
+ol.steps > li::before {
+  content: counter(s);
+  position: absolute; left: 0; top: -1px;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: #1d2b12; border: 1px solid #3b5426;
+  color: var(--neon); font-size: 14px; font-weight: 650;
+  display: flex; align-items: center; justify-content: center;
+}
+ol.steps b { display: block; color: var(--ink); margin-bottom: 3px; }
+
+.note {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  font-size: 14px;
+  color: var(--muted);
+  max-width: 44em;
+}
+.note b { color: var(--ink); }
+.warn { border-color: #5a4a1e; }
+
+details {
+  border-top: 1px solid var(--line);
+  padding: 14px 0;
+  max-width: 44em;
+}
+summary { cursor: pointer; color: var(--ink); font-weight: 550; list-style: none; }
+summary::-webkit-details-marker { display: none; }
+summary::before { content: '+ '; color: var(--neon); font-weight: 700; }
+details[open] summary::before { content: '– '; }
+details p { margin: 10px 0 0; }
+
+footer {
+  border-top: 1px solid var(--line);
+  padding: 34px 0 60px; color: var(--muted); font-size: 13.5px;
+}
+footer .wrap { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
+footer a { color: var(--muted); }
+footer .spacer { margin-left: auto; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <svg width="30" height="14" viewBox="0 0 44 20" aria-hidden="true">
+        <path d="M2 10 L5 10 L7 4 L9 16 L11 7 L13 13 L15 10 L18 10"
+              fill="none" stroke="#7cb342" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M26 10 L29 10 L31 5 L33 15 L35 8 L37 12 L39 10 L42 10"
+              fill="none" stroke="#7cb342" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Hush
+    </a>
+    <span class="spacer"></span>
+    <a class="link" href="index.html#how">How it works</a>
+    <a class="link" href="index.html#try">Pricing</a>
+    <a class="link" href="index.html#faq">FAQ</a>
+    <a class="link" href="contact.html">Contact</a>
+  </div>
+</nav>
+
+<header class="doc">
+  <div class="wrap">
+    <h1>Download Hush</h1>
+    <p class="sub">
+      One download. It runs in free mode until you paste a licence key &mdash;
+      there is no separate trial build to replace later.
+    </p>
+  </div>
+</header>
+
+<main>
+
+<section class="doc">
+  <div class="wrap">
+    <div class="get">
+      <a class="dl" id="dlBtn" href="downloads/Hush-1.0.0.zxp" download>Download Hush 1.0.0</a>
+      <p class="meta">
+        macOS &middot; Adobe Premiere Pro 2021 or later &middot; <span id="dlSize">.zxp</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="doc">
+  <div class="wrap">
+    <h2>What free mode does</h2>
+    <p>
+      Free mode runs the <b>complete detection</b> on the first five minutes of
+      your own recordings. Not a sample file, not a reduced algorithm &mdash;
+      the same analysis, the same settings, the same output, stopping at five
+      minutes.
+    </p>
+    <p>
+      That is deliberate. Multi&#8209;microphone audio varies enormously, and the
+      only question worth answering is whether Hush works on <em>your</em>
+      recordings. Five minutes of your own show tells you that. A demo of
+      somebody else&rsquo;s does not.
+    </p>
+  </div>
+</section>
+
+<section class="doc">
+  <div class="wrap">
+    <h2>Installing it</h2>
+
+    <div class="note warn" style="margin-bottom:22px">
+      <b>A .zxp will not open by double&#8209;clicking.</b> macOS has no idea what
+      it is, and will either do nothing or offer to search the App Store. This
+      is normal and is not a broken download &mdash; Adobe extensions need an
+      installer, and the free one below takes about a minute.
+    </div>
+
+    <ol class="steps">
+      <li>
+        <b>Get a ZXP installer, if you do not have one</b>
+        <a href="https://zxpinstaller.com" rel="noopener">ZXP Installer</a> is
+        free and does one thing. Anastasiy&rsquo;s Extension Manager works too.
+      </li>
+      <li>
+        <b>Quit Premiere Pro</b>
+        Installing while it is running means the panel will not appear until you
+        restart anyway, and the install can fail quietly.
+      </li>
+      <li>
+        <b>Drag Hush&#8209;1.0.0.zxp onto the installer</b>
+        It will confirm when it has finished. Nothing else is needed.
+      </li>
+      <li>
+        <b>Open Premiere and find the panel</b>
+        <code>Window &rarr; Extensions &rarr; Hush</code>. Dock it wherever you
+        like; Premiere will remember.
+      </li>
+      <li>
+        <b>Paste your licence key, if you have one</b>
+        Into the box at the bottom of the panel. Without one it runs in free
+        mode, which is the point &mdash; try it first.
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section class="doc">
+  <div class="wrap">
+    <h2>If the panel is not there</h2>
+
+    <details>
+      <summary>Window &rarr; Extensions is empty, or Hush is not listed</summary>
+      <p>
+        Restart Premiere fully &mdash; not just closing the project. Extensions
+        are registered at launch, so a panel installed while Premiere was open
+        will not appear until the next start.
+      </p>
+    </details>
+
+    <details>
+      <summary>The panel opens but is blank or white</summary>
+      <p>
+        Close it, restart Premiere, and open it again. If it is still blank,
+        email <a href="mailto:hushextension@gmail.com">hushextension@gmail.com</a>
+        and say which Premiere version and which macOS version you are on
+        &mdash; that pair is usually enough to identify it.
+      </p>
+    </details>
+
+    <details>
+      <summary>The installer says the extension is not signed, or refuses</summary>
+      <p>
+        Hush is signed. If an installer still objects, it is usually an old copy
+        of the installer itself &mdash; download a fresh one from the link
+        above. If that does not do it, email support rather than disabling any
+        security setting.
+      </p>
+    </details>
+
+    <details>
+      <summary>Something else</summary>
+      <p>
+        Press <b>Export Analysis</b> in the panel and attach the file to an email
+        to <a href="mailto:hushextension@gmail.com">hushextension@gmail.com</a>.
+        It contains measurements and timings only &mdash; no audio &mdash; and it
+        usually shows the problem straight away.
+      </p>
+    </details>
+  </div>
+</section>
+
+<section class="doc">
+  <div class="wrap">
+    <h2>Updating later</h2>
+    <p>
+      Hush tells you in the panel when a new version exists, and subscribers get
+      an email. Updating is the same as installing: download the new
+      <code>.zxp</code>, drag it onto the installer, restart Premiere. Your
+      licence key and settings are kept &mdash; they live outside the extension
+      folder precisely so an update cannot wipe them.
+    </p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© <span id="yr">2026</span> Lake Media Ltd</span>
+    <span class="spacer"></span>
+    <a href="index.html">Hush</a>
+    <a href="install.html">Download</a>
+    <a href="terms.html">Terms</a>
+    <a href="privacy.html">Privacy</a>
+    <a href="contact.html">Contact</a>
+  </div>
+</footer>
+
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+/*
+ * Keep the version on this page tied to what is actually published, rather than
+ * to whatever was hardcoded the day the page was written. version.json is the
+ * same file the panel checks for updates, so the download button and the panel
+ * can never disagree about what the current release is.
+ */
+(function () {
+  var btn = document.getElementById('dlBtn');
+  if (!btn || !window.fetch) return;
+
+  fetch('version.json', { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      if (!d || !d.version) return;
+      btn.textContent = 'Download Hush ' + d.version;
+      btn.href = 'downloads/Hush-' + d.version + '.zxp';
+    })
+    .catch(function () { /* leave the hardcoded fallback in place */ })
+    .then(guard);
+
+  /*
+   * If the file is not actually there, say so. A 404 from the download button
+   * on a product page reads as a dead or abandoned site, which is a worse first
+   * impression than an honest "not yet".
+   *
+   * Fails open on purpose: a HEAD that errors for any other reason leaves the
+   * button exactly as it was, because breaking a working download to guard
+   * against a missing one would be the wrong trade.
+   */
+  function guard() {
+    if (!btn.href) return;
+    fetch(btn.href, { method: 'HEAD' })
+      .then(function (r) {
+        if (r.ok) return;
+        btn.removeAttribute('href');
+        btn.style.background = '#2a2a30';
+        btn.style.color = '#9a9aa4';
+        btn.style.cursor = 'default';
+        btn.textContent = 'Download not published yet';
+        var m = document.getElementById('dlSize');
+        if (m) {
+          m.parentNode.innerHTML =
+            'The build is being finalised. Email ' +
+            '<a href="mailto:hushextension@gmail.com">hushextension@gmail.com</a>' +
+            ' and we will send it to you directly.';
+        }
+      })
+      .catch(function () { /* leave it alone */ });
+  }
+})();
+</script>
+
+</body>
+</html>

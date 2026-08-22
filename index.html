@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hush — multi-mic audio, cut in a minute · Premiere Pro</title>
 
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
 <meta name="description" content="Cuts multi-mic audio automatically — podcasts, interviews, panels, roundtables. Works out who is speaking from mic distance, not just loudness, mutes everyone else and fades every edit.">
 <meta property="og:title" content="Hush — multi-mic audio, cut in a minute">
 <meta property="og:description" content="Cuts multi-mic audio automatically. Two hours across five microphones in a minute.">
@@ -857,7 +861,7 @@ footer .spacer { margin-left: auto; }
       <!-- Replace with your store's checkout link. Lemon Squeezy and Paddle
            both give you a URL; nothing else on this page needs to change. -->
       <a class="btn glow" href="#try" id="buyBtn"><!--BUY-LINK-HERE-->Get Hush</a>
-      <a class="btn ghost" href="#try">Try it free</a>
+      <a class="btn ghost" href="install.html">Try it free</a>
       <span class="price">The free version runs on the first 5 minutes of any sequence.</span>
     </div>
   </div>
@@ -1243,7 +1247,7 @@ footer .spacer { margin-left: auto; }
       </ul>
     </div>
     <div class="buy">
-      <a class="btn ghost" href="#try" id="demoBtn"><!--BUY-LINK-HERE-->Download the free version</a>
+      <a class="btn ghost" href="install.html" id="demoBtn">Download the free version</a>
     </div>
   </div>
 </section>
@@ -1343,6 +1347,7 @@ footer .spacer { margin-left: auto; }
   <div class="wrap">
     <span>© <span id="yr">2026</span> Lake Media Ltd</span>
     <span class="spacer"></span>
+    <a href="install.html">Download</a>
     <a href="terms.html">Terms</a>
     <a href="privacy.html">Privacy</a>
     <a href="contact.html">Contact</a>
@@ -1925,8 +1930,9 @@ function waveform(seed, segments, duration) {
     sw.setAttribute('aria-checked', String(annual));
 
     // Point every Buy button at the variant currently on screen.
+    // Not demoBtn - that one is the free download and must never be a checkout.
     var href = (annual ? BUY.annual : BUY.monthly) || '#try';
-    ['buyBtn', 'priceBuy', 'demoBtn'].forEach(function (id) {
+    ['buyBtn', 'priceBuy'].forEach(function (id) {
       var a = document.getElementById(id);
       if (a) a.setAttribute('href', href);
     });

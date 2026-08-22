@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!--
+    The mark is the product: four microphones, one has the floor.
+
+    Drawn as bars rather than the two-waveform brand glyph because a favicon is
+    read at 16px. The waveform's thin strokes and the gap between them vanish at
+    that size and it turns into a smudge. Bars keep their shape all the way down.
+  -->
+  <rect width="64" height="64" rx="14" fill="#0c0c0e"/>
+  <g>
+    <rect x="13" y="26" width="8" height="12" rx="4" fill="#3f6b30"/>
+    <rect x="25" y="15" width="8" height="34" rx="4" fill="#a3e635"/>
+    <rect x="37" y="23" width="8" height="18" rx="4" fill="#3f6b30"/>
+    <rect x="49" y="28" width="8"  height="8" rx="4" fill="#3f6b30"/>
+  </g>
+</svg>

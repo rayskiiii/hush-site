@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Privacy — Hush</title>
+
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="robots" content="index,follow">
 
 <style>
@@ -123,6 +127,7 @@ footer .spacer { margin-left: auto; }
     <a class="link" href="index.html#how">How it works</a>
     <a class="link" href="index.html#try">Pricing</a>
     <a class="link" href="index.html#faq">FAQ</a>
+    <a class="link" href="contact.html">Contact</a>
   </div>
 </nav>
 
@@ -153,8 +158,9 @@ footer .spacer { margin-left: auto; }
     <h2>There is no analytics or telemetry</h2>
     <p>
       Hush does not track how you use it, does not report crashes
-      automatically, and contains no analytics of any kind. The only network
-      request it ever makes is to check your licence.
+      automatically, and contains no analytics of any kind. It makes exactly
+      <b>two</b> network requests, both described below, and neither one reports
+      anything about you or your work.
     </p>
   </div>
 </section>
@@ -178,6 +184,29 @@ footer .spacer { margin-left: auto; }
       licence. Their privacy policy covers what they hold, and it is where your
       name, email and payment details live. Hush never sees your payment
       information, and neither does its developer.
+    </p>
+  </div>
+</section>
+
+<section class="doc">
+  <div class="wrap">
+    <h2>The update check</h2>
+    <p>
+      A few seconds after the panel opens, Hush fetches one small public file
+      from this website to see whether a newer version exists. It is a plain
+      download of a file anyone can open in a browser:
+      <a href="version.json">hushforpremiere.com/version.json</a>.
+    </p>
+    <p>
+      <b>It sends nothing.</b> Not your licence key, not the machine identifier,
+      not even which version you are running &mdash; the comparison happens on
+      your computer after the file arrives. As with any web request your IP
+      address is visible to the server serving the file, which is GitHub Pages;
+      nothing is recorded by us and there is nothing to record it with.
+    </p>
+    <p>
+      If it fails for any reason &mdash; no connection, blocked network, the file
+      missing &mdash; Hush says nothing and carries on. It never blocks a run.
     </p>
   </div>
 </section>
@@ -223,8 +252,9 @@ footer .spacer { margin-left: auto; }
     <span>© <span id="yr">2026</span> Lake Media Ltd</span>
     <span class="spacer"></span>
     <a href="index.html">Hush</a>
+    <a href="install.html">Download</a>
     <a href="terms.html">Terms</a>
-    <a href="mailto:hushextension@gmail.com">Contact</a>
+    <a href="contact.html">Contact</a>
   </div>
 </footer>
 
