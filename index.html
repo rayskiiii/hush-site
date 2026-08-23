@@ -617,6 +617,10 @@ h1 .grad {
 .price-now { font-size: 46px; font-weight: 700; letter-spacing: -.03em; }
 .price-per { font-size: 17px; color: var(--muted); }
 .price-sub { font-size: 13.5px; color: var(--muted); margin: 8px 0 22px; }
+.already {
+  color: var(--muted); font-size: 13.5px; margin: 14px 0 0;
+  padding-top: 14px; border-top: 1px solid var(--line);
+}
 .price-save { font-size: 13.5px; color: #ff87b7; margin: 14px 0 0; min-height: 1.4em; }
 
 .includes {
@@ -1245,6 +1249,10 @@ footer .spacer { margin-left: auto; }
         <li>Every update while subscribed</li>
         <li>Cancel any time &middot; VAT and sales tax included</li>
       </ul>
+      <p class="already">
+        Already trying it? Your key unlocks the copy you have &mdash; no
+        reinstall, no second download.
+      </p>
     </div>
     <div class="buy">
       <a class="btn ghost" href="install.html" id="demoBtn">Download the free version</a>
@@ -1258,9 +1266,12 @@ footer .spacer { margin-left: auto; }
 
     <details>
       <summary>What do I get when I buy?</summary>
-      <p>An email with the installer and your licence key. Drag the file onto
-      the free ZXP Installer, restart Premiere, paste the key into the panel.
-      No Terminal, no command line.</p>
+      <p>Your licence key by email, straight away. The software itself is the
+      same download as the free version &mdash; if you have already been trying
+      it, there is <b>nothing to reinstall</b>: paste the key into the panel and
+      the five&#8209;minute limit lifts. If you have not,
+      <a href="install.html">download it here</a> and drag it onto the free ZXP
+      Installer. No Terminal, no command line.</p>
     </details>
 
     <details>
@@ -1930,9 +1941,10 @@ function waveform(seed, segments, duration) {
     sw.setAttribute('aria-checked', String(annual));
 
     // Point every Buy button at the variant currently on screen.
-    // Not demoBtn - that one is the free download and must never be a checkout.
+    // Only priceBuy. demoBtn is the free download, and buyBtn is above the
+    // price on the page - both should lead somewhere that informs first.
     var href = (annual ? BUY.annual : BUY.monthly) || '#try';
-    ['buyBtn', 'priceBuy'].forEach(function (id) {
+    ['priceBuy'].forEach(function (id) {
       var a = document.getElementById(id);
       if (a) a.setAttribute('href', href);
     });
