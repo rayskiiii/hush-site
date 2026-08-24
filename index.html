@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hush — multi-mic audio, cut in a minute · Premiere Pro</title>
+<link rel="canonical" href="https://hushforpremiere.com/index.html">
+<meta property="og:url" content="https://hushforpremiere.com/index.html">
+<meta property="og:image" content="https://hushforpremiere.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://hushforpremiere.com/og-image.png">
 
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="any">
@@ -103,6 +108,10 @@ nav a.link {
   white-space: nowrap; flex: none;
 }
 nav a.link:hover { color: var(--ink); }
+/* The download is the action on the page, so it reads as one. Accent colour
+   rather than a filled button, which would crowd a 62px bar on a phone. */
+nav a.link.cta { color: var(--neon); font-weight: 600; }
+nav a.link.cta:hover { color: #c9f66a; }
 nav .spacer { margin-left: auto; }
 
 @media (max-width: 720px) {
@@ -842,6 +851,7 @@ footer .spacer { margin-left: auto; }
     <a class="link" href="#try">Pricing</a>
     <a class="link" href="#faq">FAQ</a>
     <a class="link" href="contact.html">Contact</a>
+    <a class="link cta" href="install.html">Download</a>
   </div>
 </nav>
 
@@ -1319,6 +1329,15 @@ footer .spacer { margin-left: auto; }
     </details>
 
     <details>
+      <summary>Why does my multi&#8209;mic audio sound hollow even when each track is clean?</summary>
+      <p>Comb filtering. The same voice reaches every microphone at slightly
+      different times, and summing those tracks cancels a series of frequencies
+      spaced right through the speech range. EQ cannot fix it, because the
+      problem is the same sound arriving twice rather than a tonal imbalance.
+      <a href="mic-bleed.html">Full explanation, and how to fix it by hand</a>.</p>
+    </details>
+
+    <details>
       <summary>Premiere shows a “Translation Report” when it finishes. Is that an error?</summary>
       <p>No. Hush rebuilds your sequence as a file and imports it back, and
       Premiere raises that notice on any imported sequence — it is telling you
@@ -1358,6 +1377,7 @@ footer .spacer { margin-left: auto; }
     <span>© <span id="yr">2026</span> Lake Media Ltd</span>
     <span class="spacer"></span>
     <a href="install.html">Download</a>
+    <a href="mic-bleed.html">Mic bleed guide</a>
     <a href="terms.html">Terms</a>
     <a href="privacy.html">Privacy</a>
     <a href="contact.html">Contact</a>

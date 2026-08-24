@@ -9,6 +9,15 @@
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="robots" content="index,follow">
+<meta name="description" content="Hush analyses audio entirely on your own computer. No uploads, no telemetry, no analytics. Exactly two network requests, both explained.">
+<link rel="canonical" href="https://hushforpremiere.com/privacy.html">
+<meta property="og:title" content="Privacy — Hush: your audio never leaves your computer">
+<meta property="og:description" content="Hush analyses audio entirely on your own computer. No uploads, no telemetry, no analytics. Exactly two network requests, both explained.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://hushforpremiere.com/privacy.html">
+<meta property="og:image" content="https://hushforpremiere.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://hushforpremiere.com/og-image.png">
 
 <style>
 /* Same palette and furniture as the front page. Duplicated deliberately: a
@@ -56,11 +65,25 @@ nav {
   backdrop-filter: blur(8px);
 }
 nav .wrap { display: flex; align-items: center; gap: 28px; height: 62px; }
-.brand { display: flex; align-items: center; gap: 9px; font-weight: 650; letter-spacing: -.01em; text-decoration: none; }
+.brand { display: flex; align-items: center; gap: 9px; font-weight: 650; letter-spacing: -.01em; text-decoration: none; white-space: nowrap; }
 .brand svg { display: block; }
-nav a.link { color: var(--muted); text-decoration: none; font-size: 14.5px; }
+nav a.link.cta { color: var(--neon); font-weight: 600; }
+nav a.link.cta:hover { color: #c9f66a; }
+nav a.link { color: var(--muted); text-decoration: none; font-size: 14.5px; white-space: nowrap; }
 nav a.link:hover { color: var(--ink); }
 nav .spacer { margin-left: auto; }
+
+/* 🔴 Without this a phone wraps the nav onto three lines and the sticky bar
+   eats a third of the screen. The links stay on one line and the row scrolls
+   sideways instead - which is also why a sixth item is safe to add. */
+@media (max-width: 720px) {
+  nav .wrap { gap: 18px; overflow-x: auto; scrollbar-width: none; }
+  nav .wrap::-webkit-scrollbar { display: none; }
+  nav .spacer { display: none; }
+  nav a.link { font-size: 13.5px; }
+  .wrap { padding: 0 18px; }
+}
+
 
 header.doc { padding: 60px 0 30px; }
 h1 { font-size: clamp(32px, 5vw, 42px); letter-spacing: -.03em; margin: 0 0 10px; line-height: 1.08; }
@@ -128,6 +151,7 @@ footer .spacer { margin-left: auto; }
     <a class="link" href="index.html#try">Pricing</a>
     <a class="link" href="index.html#faq">FAQ</a>
     <a class="link" href="contact.html">Contact</a>
+    <a class="link cta" href="install.html">Download</a>
   </div>
 </nav>
 
@@ -253,6 +277,7 @@ footer .spacer { margin-left: auto; }
     <span class="spacer"></span>
     <a href="index.html">Hush</a>
     <a href="install.html">Download</a>
+    <a href="mic-bleed.html">Mic bleed guide</a>
     <a href="terms.html">Terms</a>
     <a href="contact.html">Contact</a>
   </div>
