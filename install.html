@@ -208,7 +208,16 @@ footer .spacer { margin-left: auto; }
     <div class="get">
       <a class="dl" id="dlBtn" href="downloads/Hush-1.0.0.zxp" download>Download Hush 1.0.0</a>
       <p class="meta">
-        macOS &middot; Adobe Premiere Pro 2021 or later &middot; <span id="dlSize">.zxp</span>
+        <!--
+          2022, not 2021. The manifest declares PPRO [22.0,99.9], and 22.0 IS
+          Premiere Pro 2022 - so on 2021 the extension installs without error
+          and then simply never appears in the Window > Extensions menu, with
+          nothing anywhere to say why. The home page already said 2022; this
+          page was the one that was wrong, and it is the page people read
+          before they buy.
+        -->
+        macOS, Apple Silicon &middot; Adobe Premiere Pro 2022 or later &middot;
+        <span id="dlSize">.zxp</span>
       </p>
     </div>
   </div>

@@ -868,7 +868,13 @@ footer .spacer { margin-left: auto; }
       every other microphone and fades each edit.
     </p>
 
-    <p class="compat">Premiere Pro 2022 or later · macOS · cancel any time</p>
+    <!--
+      Apple Silicon, stated plainly. The bundled ffmpeg is an arm64 binary, so
+      on an Intel Mac Hush needs ffmpeg installed separately. Saying only
+      "macOS" sells it to people it will not work for out of the box, and the
+      refund arrives after they have already been disappointed.
+    -->
+    <p class="compat">Premiere Pro 2022 or later · macOS (Apple Silicon) · cancel any time</p>
 
     <div class="buy">
       <!-- Replace with your store's checkout link. Lemon Squeezy and Paddle
@@ -1215,7 +1221,7 @@ footer .spacer { margin-left: auto; }
       no tracking. Click-to-play plus youtube-nocookie.com keeps that true.
     -->
     <figure class="demo" style="margin:0; padding:0; border:0; background:none">
-      <div class="video-frame" id="videoFrame" data-yt="">
+      <div class="video-frame" id="videoFrame" data-yt="py0B9Ta23hk">
         <div class="video-empty" id="videoEmpty">Demo video coming soon.</div>
       </div>
     </figure>
@@ -1913,9 +1919,14 @@ function waveform(seed, segments, duration) {
    * Left empty until the product is published: the button then falls back to
    * the pricing section rather than opening a dead link.
    */
+  /*
+   * LIVE, not test. Lemon Squeezy keeps test and live as separate stores with
+   * separate products, so the live variant has its own UUID - the test one
+   * (be07f010...) looked identical and took no money.
+   */
   var BUY = {
-    monthly: 'https://gethush.lemonsqueezy.com/checkout/buy/be07f010-bba5-4aa5-a59c-260f18ba5f86',
-    annual:  'https://gethush.lemonsqueezy.com/checkout/buy/be07f010-bba5-4aa5-a59c-260f18ba5f86'
+    monthly: 'https://gethush.lemonsqueezy.com/checkout/buy/6bc46346-7bcf-4f03-b95e-6f2b9f8c90d5',
+    annual:  'https://gethush.lemonsqueezy.com/checkout/buy/6bc46346-7bcf-4f03-b95e-6f2b9f8c90d5'
   };
 
   /*

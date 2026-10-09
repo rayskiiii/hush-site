@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.28",
   "url": "https://hushforpremiere.com",
-  "notes": "First public release."
+  "notes": "Words no longer lose their endings - the fade-out was starting inside the last syllable on tighter settings. Room tone now continues an existing clip instead of leaving two-frame fragments. Mics that appear in only part of a sequence are measured correctly, and the log names any track whose sync drifts from the rest. On an Intel Mac Hush now finds and uses a system ffmpeg instead of refusing to run."
 }
