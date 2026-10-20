@@ -1,5 +1,5 @@
 {
-  "version": "1.0.28",
+  "version": "1.0.31",
   "url": "https://hushforpremiere.com",
-  "notes": "Words no longer lose their endings - the fade-out was starting inside the last syllable on tighter settings. Room tone now continues an existing clip instead of leaving two-frame fragments. Mics that appear in only part of a sequence are measured correctly, and the log names any track whose sync drifts from the rest. On an Intel Mac Hush now finds and uses a system ffmpeg instead of refusing to run."
+  "notes": "No more one-frame clips: a hole left too short by padding is now closed rather than cut, since the crossfades either side already cover it. Hush also keeps the cut inside a number of clips Premiere can play, puts imported items in one \"Hush imports\" bin, no longer lets the fade-out start inside the last word, and finds a system ffmpeg on an Intel Mac."
 }
